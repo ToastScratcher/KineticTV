@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ToastTV | Audio & Fit Fix</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root { --bg: #0a0a0b; --card: #161618; --accent: #3d5afe; --side-width: 300px; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        
+        body, html { 
+            width: 100vw; height: 100vh; 
+            background: var(--bg); color: #ffffff; 
+            font-family: -apple-system, sans-serif; 
+            overflow: hidden; position: fixed;
+        }
+
+        /* SCREENSAVER */
+        #idle-screensaver {
+            display: none; position: fixed; inset: 0; z-index: 10000;
+            background: linear-gradient(125deg, rgba(61,90,254,0.3), rgba(255,0,234,0.3)), 
+                        url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80') no-repeat center center;
+            background-size: cover; align-items: center; justify-content: center; cursor: pointer;
+        }
+        #idle-screensaver h1 { font-size: 8vw; -webkit-text-stroke: 2px white; color: black; }
+
+        /* SIDEBAR DRAWER - MOBILE & TV OPTIMIZED */
+        #side-list { 
+            position: absolute; left: 0; top: 0; bottom: 0; 
+            width: var(--side-width); max-width: 80vw;
+            background: rgba(15,15,17,0.98); 
+            backdrop-filter: blur(20px); border-right: 1px solid #333; 
+            z-index: 5000; transition: transform 0.3s ease;
+            overflow-y: auto; transform: translateX(-100%);
+        }
+        #side-list.active { transform: translateX(0); }
+        
+        .side-header { 
+            padding: 20px; display: flex; justify-content: space-between; 
+            align-items: center; border-bottom: 1px solid #333; position: sticky; top: 0; background: #0f0f11;
+        }
+
+        .side-item { padding: 15px 20px; border-bottom: 1px solid #222; font-size: 14px; cursor: pointer; }
+        .side-item.active { color: var(--accent); background: #1c1c1f; }
+
+        /* PLAYER */
+        #player-screen { display: none; position: fixed; inset: 0; background: #000; z-index: 3000; }
+        #video-container { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        video { width: 100%; height: 100%; object-fit: contain; }
+
+        .ui-overlay { 
+            position: absolute; inset: 0; display: flex; flex-direction: column; 
+            justify-content: space-between; padding: 20px; z-index: 3100; 
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.8) 100%);
+            pointer-events: none;
+        }
+        .ui-overlay * { pointer-events: auto; }
+        .hidden { opacity: 0; }
+
+        .btn { background: var(--accent); border: none; color: white; padding: 12px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        /* MENU */
+        #home-screen { position: absolute; inset: 0; padding: 20px; overflow-y: auto; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 20px; }
+        .card { background: var(--card); border: 1px solid #252528; border-radius: 12px; padding: 25px 10px; text-align: center; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body onmousemove="resetIdle()" onclick="resetIdle()" ontouchstart="resetIdle()">
+
+    <div id="idle-screensaver" onclick="stopScreensaver()"><h1>ToastTV</h1></div>
+
+    <div id="home-screen">
+        <h1 style="margin-bottom: 20px;">ToastTV📺</h1>
+        <div class="grid">
+            <div class="card" onclick="unlockAndFilter('Sports')">⚽ SPORTS</div>
+            <div class="card" onclick="unlockAndFilter('English')">🇬🇧 ENGLISH</div>
+            <div class="card" onclick="unlockAndFilter('French')">🇫🇷 FRENCH</div>
+            <div class="card" onclick="unlockAndFilter('Italian')">🇮🇹 ITALIAN</div>
+            <div class="card" onclick="unlockAndFilter('Kurdish')">🇹🇯 KURDISH</div>
+            <div class="card" onclick="unlockAndFilter('BBC')">📰 BBC</div>
+        </div>
+    </div>
+
+    <div id="player-screen">
+        <div id="side-list">
+            <div class="side-header">
+                <span style="font-weight:bold; color:var(--accent)">CHANNELS</span>
+                <button style="background:#333; color:white; border:none; padding:5px 10px; border-radius:5px;" onclick="toggleSidebar()">✕</button>
+            </div>
+            <div id="list-content"></div>
+        </div>
+        
+        <div id="video-container" onclick="handleVideoTap()">
+            <video id="video" playsinline></video>
+        </div>
+        
+        <div id="ui-overlay" class="ui-overlay">
+            <div style="display:flex; justify-content:space-between;">
+                <button class="btn" style="background:#222" onclick="toggleSidebar()">☰ LIST</button>
+                <button class="btn" style="background:#ff3b30" onclick="closePlayer()">✕ EXIT</button>
+            </div>
+            <div style="align-self:center; display:flex; gap:10px;">
+                <button class="btn" onclick="prev()">◄</button>
+                <button class="btn" id="play-btn" onclick="togglePlay()">PAUSE</button>
+                <button class="btn" onclick="next()">►</button>
+            </div>
+            <div></div>
+        </div>
+    </div>
+
+<script>
+    const hls = new Hls();
+    const video = document.getElementById('video');
+    const vibeAudio = new Audio("Halcali - Otsukare Summer.mp3");
+    vibeAudio.loop = true;
+    
+    let playlist = [], currentList = [], curIdx = 0, idleTimer, uiTimer;
+    let audioUnlocked = false;
+
+    // PRIMES THE AUDIO (Critical for Browsers/TVs)
+    function unlockAudio() {
+        if (!audioUnlocked) {
+            vibeAudio.play().then(() => {
+                vibeAudio.pause();
+                vibeAudio.currentTime = 0;
+                audioUnlocked = true;
+            }).catch(e => console.log("Audio unlock failed:", e));
+        }
+    }
+
+    function resetIdle() {
+        if (document.getElementById('idle-screensaver').style.display === 'flex') return;
+        clearTimeout(idleTimer);
+        if (getComputedStyle(document.getElementById('home-screen')).display !== 'none') {
+            idleTimer = setTimeout(() => {
+                document.getElementById('idle-screensaver').style.display = 'flex';
+                if (audioUnlocked) vibeAudio.play();
+            }, 20000);
+        }
+    }
+
+    function stopScreensaver() {
+        document.getElementById('idle-screensaver').style.display = 'none';
+        vibeAudio.pause(); vibeAudio.currentTime = 0;
+        resetIdle();
+    }
+
+    function unlockAndFilter(cat) {
+        unlockAudio(); // User click enables audio
+        filter(cat);
+    }
+
+    function handleVideoTap() {
+        const side = document.getElementById('side-list');
+        if (side.classList.contains('active')) side.classList.remove('active');
+        else showUI();
+    }
+
+    function showUI() {
+        const ui = document.getElementById('ui-overlay');
+        ui.classList.remove('hidden');
+        clearTimeout(uiTimer);
+        uiTimer = setTimeout(() => ui.classList.add('hidden'), 5000);
+    }
+
+    async function init() {
+        const sources = [
+            { c: 'Sports', u: 'https://iptv-org.github.io/iptv/categories/sports.m3u' },
+            { c: 'English', u: 'https://iptv-org.github.io/iptv/languages/eng.m3u' },
+            { c: 'French', u: 'https://iptv-org.github.io/iptv/languages/fra.m3u' },
+            { c: 'Italian', u: 'https://iptv-org.github.io/iptv/languages/ita.m3u' },
+            { c: 'Kurdish', u: 'https://iptv-org.github.io/iptv/languages/kur.m3u' }
+        ];
+        for (let s of sources) {
+            try {
+                const r = await fetch(s.u);
+                const t = await r.text();
+                parse(t, s.c);
+            } catch (e) {}
+        }
+        resetIdle();
+    }
+
+    function parse(data, cat) {
+        data.split('\n').forEach((line, i, arr) => {
+            if (line.includes('#EXTINF')) {
+                const url = arr[i+1]?.trim();
+                const name = line.split(',')[1]?.trim() || "Channel";
+                if (url?.startsWith('http')) {
+                    let finalCat = cat;
+                    if (name.toUpperCase().includes('BBC')) finalCat = 'BBC';
+                    playlist.push({ name, url, cat: finalCat });
+                }
+            }
+        });
+    }
+
+    function play(idx) {
+        curIdx = idx; const ch = currentList[curIdx];
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('player-screen').style.display = 'block';
+        document.getElementById('side-list').classList.remove('active');
+
+        document.getElementById('list-content').innerHTML = currentList.map((c, i) => `
+            <div class="side-item ${i===idx?'active':''}" onclick="play(${i})">${c.name}</div>
+        `).join('');
+
+        if (ch.url.includes('.m3u8')) {
+            hls.loadSource(ch.url); hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+        } else {
+            video.src = ch.url; video.play();
+        }
+        showUI();
+    }
+
+    function filter(cat) {
+        currentList = playlist.filter(item => item.cat === cat);
+        if (currentList.length) play(0);
+    }
+
+    function toggleSidebar() { document.getElementById('side-list').classList.toggle('active'); }
+
+    function closePlayer() {
+        video.pause();
+        document.getElementById('player-screen').style.display = 'none';
+        document.getElementById('home-screen').style.display = 'flex';
+        resetIdle();
+    }
+
+    function togglePlay() { 
+        video.paused ? video.play() : video.pause();
+        document.getElementById('play-btn').innerText = video.paused ? "PLAY" : "PAUSE";
+    }
+
+    function prev() { curIdx = (curIdx - 1 + currentList.length) % currentList.length; play(curIdx); }
+    function next() { curIdx = (curIdx + 1) % currentList.length; play(curIdx); }
+
+    init();
+</script>
+</body>
+</html>
