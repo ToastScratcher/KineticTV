@@ -3,212 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ToastTV | Final Pro</title>
+    <title>ToastTV📺🍞</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root { --bg: #0a0a0b; --card: #161618; --accent: #3d5afe; --side-width: 320px; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body, html { width: 100vw; height: 100vh; background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; overflow: hidden; position: fixed; }
+        body, html { width: 100vw; height: 100vh; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; position: fixed; }
 
-        /* START OVERLAY */
+        /* PREVENT WHITE SCREEN ON LOAD */
         #start-overlay { position: fixed; inset: 0; z-index: 20000; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-
-        /* SCREENSAVER (SPOTIFY STYLE) */
+        
+        /* MOUNTAIN SCREENSAVER */
         #idle-screensaver { 
             display: none; position: fixed; inset: 0; z-index: 10000; 
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
-                        url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80') center/cover; 
-            flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            background-color: #000; flex-direction: column; align-items: center; justify-content: center; text-align: center; overflow: hidden;
         }
-        .spotify-ui { width: 85%; max-width: 450px; margin-top: 20px; padding: 20px; background: rgba(0,0,0,0.4); border-radius: 20px; backdrop-filter: blur(10px); }
-        .progress-container { width: 100%; margin: 15px 0; }
-        .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; position: relative; cursor: pointer; }
-        #progress-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: #fff; border-radius: 2px; }
-        #progress-knob { position: absolute; right: -6px; top: -5px; width: 14px; height: 14px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        .time-info { display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; color: #aaa; margin-top: 8px; }
+        #mountain-bg {
+            position: absolute; inset: -100px;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), 
+                        url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover; background-position: center; z-index: -1;
+            animation: scroll-bg 25s linear infinite alternate;
+        }
+        @keyframes scroll-bg { from { transform: scale(1.1) translateX(-20px); } to { transform: scale(1.1) translateX(20px); } }
 
-        /* SIDEBAR & SEARCH */
-        #side-list { 
-            position: fixed; left: 0; top: 0; bottom: 0; width: var(--side-width); max-width: 85vw; 
-            background: rgba(15,15,17,0.98); backdrop-filter: blur(20px); border-right: 1px solid #333; 
-            z-index: 5000; transition: transform 0.3s ease; transform: translateX(-100%); 
-            display: flex; flex-direction: column;
-        }
-        #side-list.active { transform: translateX(0); }
-        .search-area { padding: 15px; background: #000; border-bottom: 1px solid #333; }
-        #search-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #444; background: #1a1a1c; color: white; outline: none; }
-        #list-content { overflow-y: auto; flex-grow: 1; }
-        .list-item { padding: 15px; border-bottom: 1px solid #222; font-size: 14px; cursor: pointer; }
+        .ss-card { width: 85%; max-width: 350px; padding: 30px; background: rgba(0,0,0,0.5); border-radius: 24px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
+        .spotify-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 20px 0 8px 0; position: relative; }
+        #progress-fill { width: 0%; height: 100%; background: #1db954; border-radius: 2px; transition: 0.1s; }
+        .time-info { display: flex; justify-content: space-between; font-size: 10px; color: #aaa; font-family: monospace; }
 
-        /* ADAPTIVE PLAYER CONTROLS */
-        .controls-wrapper { display: flex; gap: 15px; align-self: center; }
-        @media (orientation: portrait) {
-            .controls-wrapper { flex-direction: column; width: 70px; }
-            .btn-ctrl { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        }
-        @media (orientation: landscape) {
-            .controls-wrapper { flex-direction: row; }
-            .btn-ctrl { padding: 15px 30px; border-radius: 12px; min-width: 100px; }
-        }
-
-        .btn { background: var(--accent); border: none; color: white; font-weight: bold; cursor: pointer; }
+        /* MAIN UI */
+        #home-screen { display: none; padding: 20px; overflow-y: auto; height: 100%; background: var(--bg); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 25px; }
+        .card { background: var(--card); padding: 30px 5px; text-align: center; border-radius: 18px; border: 1px solid #222; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .card:active { background: var(--accent); transform: scale(0.95); }
+        
         #player-screen { display: none; position: fixed; inset: 0; background: #000; z-index: 3000; }
         video { width: 100%; height: 100%; object-fit: contain; }
-        .ui-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 3100; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent, rgba(0,0,0,0.8)); opacity: 1; transition: opacity 0.5s; pointer-events: none; }
+        
+        #side-list { position: fixed; left: 0; top: 0; bottom: 0; width: var(--side-width); max-width: 85vw; background: #0f0f11; z-index: 5000; transform: translateX(-100%); transition: 0.3s; display: flex; flex-direction: column; border-right: 1px solid #333; }
+        #side-list.active { transform: translateX(0); }
+        .search-container { padding: 15px; background: #000; }
+        #channel-search { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #1a1a1c; color: #fff; outline: none; }
+        #list-content { overflow-y: auto; flex-grow: 1; }
+        .list-item { padding: 15px; border-bottom: 1px solid #222; font-size: 13px; cursor: pointer; }
+        
+        .ui-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; pointer-events: none; opacity: 1; transition: 0.5s; }
         .ui-overlay * { pointer-events: auto; }
-
-        #home-screen { padding: 25px; overflow-y: auto; height: 100%; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-top: 25px; }
-        .card { background: var(--card); padding: 35px 10px; text-align: center; border-radius: 20px; border: 1px solid #222; cursor: pointer; }
+        .btn { background: var(--accent); border: none; color: white; font-weight: bold; cursor: pointer; padding: 15px; border-radius: 12px; }
     </style>
 </head>
-<body onclick="resetIdle()" onmousemove="resetIdle()" ontouchstart="resetIdle()">
+<body onclick="resetIdle()">
+
+    <audio id="ss-audio" loop preload="auto">
+        <source src="Halcali - Otsukare Summer.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="start-overlay">
-        <h1 style="font-size: 3rem;">ToastTV📺</h1>
-        <button class="btn" onclick="startApp()" style="margin-top:20px; padding: 20px 60px; border-radius: 15px; font-size: 1.2rem;">START</button>
+        <h1 style="font-size: 3rem; margin-bottom: 10px;">ToastTV📺🍞</h1>
+        <p id="load-status" style="color: #555; margin-bottom: 20px;">READY TO BROADCAST</p>
+        <button class="btn" onclick="startApp()" style="padding: 20px 60px; font-size: 1.2rem; box-shadow: 0 0 20px rgba(61, 90, 254, 0.4);">START APP</button>
     </div>
 
     <div id="idle-screensaver" onclick="stopScreensaver()">
-        <h1 style="font-size: 10vw; -webkit-text-stroke: 1.5px white; color: black; font-weight: 900;">ToastTV</h1>
-        <div class="spotify-ui" onclick="event.stopPropagation()">
-            <div id="song-name" style="font-weight:bold; font-size: 1.2rem;">Song Title</div>
-            <div class="progress-container">
-                <div class="progress-bar" id="seek-bar">
-                    <div id="progress-fill"><div id="progress-knob"></div></div>
-                </div>
-                <div class="time-info">
-                    <span id="cur-time">0:00</span>
-                    <span id="dur-time">0:00</span>
-                </div>
+        <div id="mountain-bg"></div>
+        <div class="ss-card">
+            <h2 style="letter-spacing: 2px;">ToastTV</h2>
+            <p style="color: #1db954; font-size: 12px; margin-top: 5px; font-weight: bold;">HALCALI - OTSUKARE SUMMER</p>
+            <div class="spotify-bar"><div id="progress-fill"></div></div>
+            <div class="time-info">
+                <span id="time-current">0:00</span>
+                <span id="time-left">-0:00</span>
             </div>
         </div>
     </div>
 
     <div id="home-screen">
-        <h1 style="font-size: 2.5rem;">ToastTV</h1>
+        <h1 style="font-size: 2.2rem;">ToastTV📺🍞</h1>
         <div class="grid">
             <div class="card" onclick="filter('Sports')">⚽ SPORTS</div>
+            <div class="card" onclick="filter('News')">📰 NEWS</div>
+            <div class="card" onclick="filter('Movies')">🍿 MOVIES</div>
+            <div class="card" onclick="filter('Arabic')">🇮🇶 ARABIC</div>
+            <div class="card" onclick="filter('Kurdish')">🇹🇯 KURDISH</div>
             <div class="card" onclick="filter('English')">🇬🇧 ENGLISH</div>
             <div class="card" onclick="filter('French')">🇫🇷 FRENCH</div>
             <div class="card" onclick="filter('Italian')">🇮🇹 ITALIAN</div>
-            <div class="card" onclick="filter('Kurdish')">🇹🇯 KURDISH</div>
-            <div class="card" onclick="filter('BBC')">📰 BBC</div>
         </div>
     </div>
 
     <div id="player-screen">
         <div id="side-list">
-            <div class="search-area">
-                <input type="text" id="search-input" placeholder="🔍 Search channels..." oninput="handleSearch()">
-            </div>
+            <div class="search-container"><input type="text" id="channel-search" placeholder="Search..." oninput="handleSearch()"></div>
             <div id="list-content"></div>
-            <button onclick="toggleSidebar()" style="padding:20px; background:#222; border:none; color:white;">✕ CLOSE</button>
+            <button class="btn" onclick="toggleSidebar()" style="border-radius:0;">CLOSE</button>
         </div>
         <video id="video" playsinline onclick="showUI()"></video>
         <div class="ui-overlay" id="ui-overlay">
             <div style="display:flex; justify-content:space-between;">
-                <button class="btn" style="background:#333; padding: 12px 20px;" onclick="toggleSidebar()">☰ CHANNELS</button>
-                <button class="btn" style="background:#ff3b30; padding: 12px 20px;" onclick="closePlayer()">✕ EXIT</button>
+                <button class="btn" onclick="toggleSidebar()">☰ CHANNELS</button>
+                <button class="btn" style="background:#ff3b30" onclick="closePlayer()">✕ EXIT</button>
             </div>
-            <div class="controls-wrapper">
-                <button class="btn btn-ctrl" onclick="prev()">◄</button>
-                <button class="btn btn-ctrl" id="play-btn" onclick="togglePlay()">PAUSE</button>
-                <button class="btn btn-ctrl" onclick="next()">►</button>
+            <div style="display:flex; gap:10px; align-self:center;">
+                <button class="btn" onclick="prev()">◄</button>
+                <button class="btn" id="play-btn" onclick="togglePlay()">PAUSE</button>
+                <button class="btn" onclick="next()">►</button>
             </div>
-            <div></div>
+            <div id="channel-title-display" style="text-align:center; font-weight:bold; text-shadow: 2px 2px 4px #000;"></div>
         </div>
     </div>
 
 <script>
-    const hls = new Hls(), video = document.getElementById('video'), vibeAudio = new Audio();
-    const songs = [
-        { title: "Washing Machine Heart", file: "Mitski - Washing Machine Heart.mp3" },
-        { title: "Otsukare Summer", file: "Halcali - Otsukare Summer.mp3" }
-    ];
+    const hls = new Hls(), video = document.getElementById('video'), audio = document.getElementById('ss-audio');
+    let playlist = [], currentCategoryList = [], filteredList = [], idleTimer, uiTimer;
 
-    let playlist = [], currentList = [], filteredList = [], curIdx = 0, idleTimer, uiTimer, audioUnlocked = false;
-
-    function formatTime(s) {
-        if (isNaN(s)) return "0:00";
-        const m = Math.floor(s / 60), sc = Math.floor(s % 60);
-        return m + ":" + sc.toString().padStart(2, '0');
-    }
-
-    vibeAudio.ontimeupdate = () => {
-        const percent = (vibeAudio.currentTime / vibeAudio.duration * 100);
-        document.getElementById('progress-fill').style.width = percent + "%";
-        document.getElementById('cur-time').innerText = formatTime(vibeAudio.currentTime);
-        document.getElementById('dur-time').innerText = formatTime(vibeAudio.duration);
-    };
-
-    function startApp() {
-        vibeAudio.src = songs[0].file;
-        vibeAudio.play().then(() => {
-            vibeAudio.pause();
-            audioUnlocked = true;
-            document.getElementById('start-overlay').style.display = 'none';
-            init();
-            resetIdle();
-        }).catch(() => {
-            document.getElementById('start-overlay').style.display = 'none';
-            init();
-            resetIdle();
-        });
+    function startApp() { 
+        document.getElementById('start-overlay').style.display = 'none'; 
+        document.getElementById('home-screen').style.display = 'block';
+        
+        // Initial "tap" to unlock audio engine
+        audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(e => console.log("Audio prep"));
+        
+        init(); 
+        resetIdle(); 
     }
 
     function resetIdle() {
         if (document.getElementById('idle-screensaver').style.display === 'flex') return;
         clearTimeout(idleTimer);
         if (getComputedStyle(document.getElementById('home-screen')).display !== 'none') {
-            idleTimer = setTimeout(startScreensaver, 20000);
+            idleTimer = setTimeout(startScreensaver, 25000);
         }
     }
 
     function startScreensaver() {
-        const s = songs[Math.floor(Math.random() * songs.length)];
-        document.getElementById('song-name').innerText = s.title;
-        vibeAudio.src = s.file;
         document.getElementById('idle-screensaver').style.display = 'flex';
-        vibeAudio.play().catch(e => console.log("Audio play blocked"));
+        audio.play().catch(e => console.log("Audio error: ", e));
+        updateAudioUI();
     }
 
     function stopScreensaver() {
         document.getElementById('idle-screensaver').style.display = 'none';
-        vibeAudio.pause();
+        audio.pause();
         resetIdle();
+    }
+
+    function updateAudioUI() {
+        if (!audio.paused && audio.duration) {
+            const pct = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('progress-fill').style.width = pct + "%";
+            document.getElementById('time-current').innerText = formatTime(Math.floor(audio.currentTime));
+            document.getElementById('time-left').innerText = "-" + formatTime(Math.floor(audio.duration - audio.currentTime));
+            requestAnimationFrame(updateAudioUI);
+        }
+    }
+
+    function formatTime(secs) {
+        let m = Math.floor(secs / 60), s = secs % 60;
+        return m + ":" + (s < 10 ? "0" + s : s);
     }
 
     async function init() {
         const sources = [
             { c: 'Sports', u: 'https://iptv-org.github.io/iptv/categories/sports.m3u' },
+            { c: 'News', u: 'https://iptv-org.github.io/iptv/categories/news.m3u' },
+            { c: 'Movies', u: 'https://iptv-org.github.io/iptv/categories/movies.m3u' },
+            { c: 'Arabic', u: 'https://iptv-org.github.io/iptv/languages/ara.m3u' },
+            { c: 'Kurdish', u: 'https://iptv-org.github.io/iptv/languages/kur.m3u' },
             { c: 'English', u: 'https://iptv-org.github.io/iptv/languages/eng.m3u' },
             { c: 'French', u: 'https://iptv-org.github.io/iptv/languages/fra.m3u' },
-            { c: 'Italian', u: 'https://iptv-org.github.io/iptv/languages/ita.m3u' },
-            { c: 'Kurdish', u: 'https://iptv-org.github.io/iptv/languages/kur.m3u' }
+            { c: 'Italian', u: 'https://iptv-org.github.io/iptv/languages/ita.m3u' }
         ];
         for (let s of sources) {
-            try {
-                const r = await fetch(s.u);
-                const t = await r.text();
-                parse(t, s.c);
-            } catch (e) {}
+            fetch(s.u).then(res => res.text()).then(data => parse(data, s.c)).catch(e => {});
         }
     }
 
     function parse(data, cat) {
-        data.split('\n').forEach((line, i, arr) => {
-            if (line.includes('#EXTINF')) {
-                const name = line.split(',')[1]?.trim() || "Channel";
-                const url = arr[i+1]?.trim();
-                if (url && url.startsWith('http')) playlist.push({ name, url, cat });
+        let lines = data.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes('#EXTINF')) {
+                const name = lines[i].split(',')[1]?.trim() || "Channel";
+                const url = lines[i+1]?.trim();
+                // Filter out broken links and local IPs
+                if (url && url.startsWith('http') && !url.includes('192.168.') && !url.includes('127.0.0.1')) {
+                    playlist.push({ name, url, cat });
+                }
             }
-        });
+        }
+    }
+
+    function filter(cat) {
+        currentCategoryList = playlist.filter(i => i.cat === cat);
+        if (currentCategoryList.length === 0) {
+            alert("Syncing... Wait 2 seconds and tap again!");
+            return;
+        }
+        filteredList = [...currentCategoryList];
+        document.getElementById('channel-search').value = "";
+        renderList();
+        playChannel(filteredList[0]);
     }
 
     function handleSearch() {
-        const term = document.getElementById('search-input').value.toLowerCase();
-        filteredList = currentList.filter(item => item.name.toLowerCase().includes(term));
+        const q = document.getElementById('channel-search').value.toLowerCase();
+        filteredList = currentCategoryList.filter(item => item.name.toLowerCase().includes(q));
         renderList();
     }
 
@@ -218,35 +217,31 @@
         `).join('');
     }
 
-    function playByIndex(idx) {
-        const ch = filteredList[idx];
-        curIdx = currentList.indexOf(ch);
-        playChannel(ch);
-    }
+    function playByIndex(idx) { playChannel(filteredList[idx]); }
 
     function playChannel(ch) {
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('player-screen').style.display = 'block';
-        document.getElementById('side-list').classList.remove('active');
+        document.getElementById('channel-title-display').innerText = ch.name;
         if (Hls.isSupported() && ch.url.includes('.m3u8')) {
-            hls.loadSource(ch.url); hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-        } else { video.src = ch.url; video.play(); }
-    }
-
-    function filter(cat) {
-        currentList = playlist.filter(i => i.cat === cat || (cat === 'BBC' && i.name.toUpperCase().includes('BBC')));
-        filteredList = [...currentList];
-        renderList();
-        if (filteredList.length > 0) playChannel(filteredList[0]);
+            hls.detachMedia(); hls.loadSource(ch.url); hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+        } else { video.src = ch.url; video.play().catch(() => {}); }
+        showUI();
     }
 
     function toggleSidebar() { document.getElementById('side-list').classList.toggle('active'); }
     function closePlayer() { video.pause(); hls.stopLoad(); document.getElementById('player-screen').style.display = 'none'; document.getElementById('home-screen').style.display = 'block'; resetIdle(); }
     function togglePlay() { video.paused ? video.play() : video.pause(); }
-    function next() { curIdx = (curIdx + 1) % currentList.length; playChannel(currentList[curIdx]); }
-    function prev() { curIdx = (curIdx - 1 + currentList.length) % currentList.length; playChannel(currentList[curIdx]); }
-    function showUI() { const ui = document.getElementById('ui-overlay'); ui.style.opacity = '1'; clearTimeout(uiTimer); uiTimer = setTimeout(() => ui.style.opacity = '0', 5000); }
+    function next() { 
+        let curIdx = filteredList.findIndex(i => i.url === video.src || i.url === hls.url);
+        playChannel(filteredList[(curIdx + 1) % filteredList.length]); 
+    }
+    function prev() { 
+        let curIdx = filteredList.findIndex(i => i.url === video.src || i.url === hls.url);
+        playChannel(filteredList[(curIdx - 1 + filteredList.length) % filteredList.length]); 
+    }
+    function showUI() { const ui = document.getElementById('ui-overlay'); ui.style.opacity = '1'; clearTimeout(uiTimer); uiTimer = setTimeout(() => ui.style.opacity = '0', 4000); }
 </script>
 </body>
 </html>
