@@ -6,220 +6,185 @@
     <title>ToastTV📺🍞</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        :root { --bg: #0a0a0b; --card: #161618; --accent: #3d5afe; --hover: #2a2a2d; --side-width: 350px; }
+        :root { --bg: #0a0a0b; --card: #161618; --accent: #3d5afe; --text: #ffffff; --side-width: 320px; }
+        .light-mode { --bg: #f0f2f5; --card: #ffffff; --accent: #3d5afe; --text: #1c1e21; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body, html { width: 100vw; height: 100vh; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; position: fixed; }
-
-        /* HEADER */
-        #top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
-        #clock { font-size: 1.6rem; font-weight: bold; letter-spacing: 1px; }
-        #weather { font-size: 0.9rem; color: #888; margin-top: 4px; }
-
-        /* OVERLAYS */
-        #start-overlay { position: fixed; inset: 0; z-index: 20000; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        
-        /* HOME GRID */
-        #home-screen { display: none; height: 100%; overflow-y: auto; background: var(--bg); padding-bottom: 60px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; padding: 20px 30px; }
-        .card { background: var(--card); padding: 30px 10px; text-align: center; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px; border: 2px solid transparent; transition: 0.3s; outline: none; }
-        .card:focus, .card:hover { border-color: var(--accent); background: var(--hover); transform: scale(1.05); }
-
-        /* RECENT BAR */
-        #recent-container { padding: 0 30px 10px 30px; display: none; }
-        .recent-grid { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; }
-        .recent-card { background: #222; min-width: 130px; padding: 12px; border-radius: 12px; font-size: 11px; text-align: center; cursor: pointer; border: 1px solid #333; flex-shrink: 0; }
-
-        /* PLAYER & SIDEBAR */
-        #player-screen { display: none; position: fixed; inset: 0; background: #000; z-index: 3000; }
-        video { width: 100%; height: 100%; object-fit: contain; }
-        
-        #side-list { position: fixed; left: 0; top: 0; bottom: 0; width: var(--side-width); background: #0f0f11; z-index: 5000; transform: translateX(-100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+        body, html { width: 100vw; height: 100vh; background: var(--bg); color: var(--text); font-family: sans-serif; overflow: hidden; position: fixed; transition: 0.3s; }
+        #top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; }
+        #clock { font-size: 1.4rem; font-weight: bold; color: var(--accent); }
+        #home-screen { height: 100%; overflow-y: auto; padding-bottom: 100px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; padding: 0 30px; }
+        .card { background: var(--card); padding: 25px 10px; text-align: center; border-radius: 15px; cursor: pointer; font-weight: bold; border: 3px solid transparent; transition: 0.2s; outline: none; }
+        .card:focus, .card:hover { border-color: var(--accent); transform: scale(1.05); }
+        #settings-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .settings-content { background: var(--card); width: 90%; max-width: 400px; padding: 30px; border-radius: 20px; border: 1px solid var(--accent); color: var(--text); }
+        .setting-row { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+        select, input { padding: 10px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; }
+        #player-screen { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
+        video { width: 100%; height: 100%; }
+        #side-list { position: fixed; left: 0; top: 0; bottom: 0; width: var(--side-width); background: #111; z-index: 2000; transform: translateX(-100%); transition: 0.3s; display: flex; flex-direction: column; border-right: 1px solid #333; }
         #side-list.active { transform: translateX(0); }
-        #list-content { overflow-y: auto; flex-grow: 1; }
-        
-        .list-item { padding: 15px 20px; border-bottom: 1px solid #222; cursor: pointer; display: flex; align-items: center; gap: 15px; outline: none; }
-        .list-item:focus, .list-item:hover { background: #1a1a1d; }
-        .active-ch { border-left: 5px solid var(--accent); background: #1a1a1d; }
-        .ch-logo { width: 45px; height: 45px; object-fit: contain; background: #fff; border-radius: 10px; padding: 4px; }
-
-        /* PLAYER UI */
-        .ui-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 30px; pointer-events: none; opacity: 1; transition: 0.5s; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.7) 100%); }
-        .ui-overlay * { pointer-events: auto; }
-        .btn { background: var(--accent); border: none; color: white; font-weight: bold; cursor: pointer; padding: 15px 25px; border-radius: 14px; transition: 0.2s; outline: none; }
-        .btn:focus, .btn:hover { background: #2948ff; transform: scale(1.05); }
+        .list-item { padding: 15px 20px; border-bottom: 1px solid #222; cursor: pointer; color: #fff; outline: none; }
+        .list-item:focus, .list-item:hover { background: var(--accent); }
+        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 25px; pointer-events: none; background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 50%, rgba(0,0,0,0.8) 100%); transition: 0.4s; }
+        .overlay * { pointer-events: auto; }
+        .btn { background: var(--accent); border: none; color: white; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; outline: none; }
     </style>
 </head>
-<body>
-
-    <div id="start-overlay">
-        <h1 style="font-size: 3.5rem; margin-bottom: 30px;">ToastTV📺🍞</h1>
-        <button class="btn" onclick="startApp()" style="padding: 25px 80px; font-size: 1.3rem;">START WATCHING</button>
-    </div>
+<body onload="updateLang()">
 
     <div id="home-screen">
-        <div id="top-bar">
-            <div><h1 style="letter-spacing: -1px;">ToastTV📺</h1><div id="weather">Gateshead • 12°C ☁️</div></div>
-            <div id="clock">00:00</div>
+        <div id="top-header">
+            <div>
+                <h1 id="app-title">ToastTV📺</h1>
+                <button class="btn" onclick="toggleSettings()" style="padding:5px 15px; font-size:12px; margin-top:5px;">⚙️ SETTINGS</button>
+            </div>
+            <div id="clock">00:00:00</div>
         </div>
-
-        <div id="recent-container">
-            <p style="font-size: 0.75rem; color: #555; margin-bottom: 12px; font-weight: bold; text-transform: uppercase;">Continue Watching</p>
-            <div class="recent-grid" id="recent-grid"></div>
+        <div class="grid" id="category-grid">
+            <div class="card" tabindex="0" onclick="loadCat('Kurdish')">☀️ KURDISH</div>
+            <div class="card" tabindex="0" onclick="loadCat('Movies')">🎬 MOVIES</div>
+            <div class="card" tabindex="0" onclick="loadCat('Sports')">⚽ SPORTS</div>
+            <div class="card" tabindex="0" onclick="loadCat('Kids')">🧸 KIDS</div>
+            <div class="card" tabindex="0" onclick="loadCat('Greek')">🇬🇷 GREEK</div>
+            <div class="card" tabindex="0" onclick="loadCat('English')">🇬🇧 ENGLISH</div>
+            <div class="card" tabindex="0" onclick="loadCat('Spanish')">🇪🇸 SPANISH</div>
+            <div class="card" tabindex="0" onclick="loadCat('French')">🇫🇷 FRENCH</div>
+            <div class="card" tabindex="0" onclick="loadCat('Italian')">🇮🇹 ITALIAN</div>
+            <div class="card" tabindex="0" onclick="loadCat('Arabic')">🇮🇶 ARABIC</div>
         </div>
+    </div>
 
-        <div class="grid">
-            <div class="card" tabindex="0" onclick="filter('Quran')">📖 QURAN</div>
-            <div class="card" tabindex="0" onclick="filter('English')">🇬🇧 ENGLISH</div>
-            <div class="card" tabindex="0" onclick="filter('Sports')">⚽ SPORTS</div>
-            <div class="card" tabindex="0" onclick="filter('Freeview')">📡 FREEVIEW</div>
-            <div class="card" tabindex="0" onclick="filter('Kids')">🧸 KIDS</div>
-            <div class="card" tabindex="0" onclick="filter('Documentary')">🧪 DOCS</div>
-            <div class="card" tabindex="0" onclick="filter('Spanish')">🇪🇸 SPANISH</div>
-            <div class="card" tabindex="0" onclick="filter('Movies')">🍿 MOVIES</div>
-            <div class="card" tabindex="0" onclick="filter('Arabic')">🇮🇶 ARABIC</div>
+    <div id="settings-modal">
+        <div class="settings-content">
+            <h2 id="settings-label">Settings</h2>
+            <div class="setting-row">
+                <label id="theme-label">Theme</label>
+                <select id="theme-select" onchange="updateTheme()">
+                    <option value="dark">Dark Mode</option>
+                    <option value="light">Light Mode</option>
+                </select>
+            </div>
+            <div class="setting-row">
+                <label id="lang-label">Language</label>
+                <select id="lang-select" onchange="updateLang()">
+                    <option value="en">English</option>
+                    <option value="ku">Kurdish</option>
+                    <option value="ar">Arabic</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                </select>
+            </div>
+            <div class="setting-row">
+                <label id="alarm-label">Bedtime Alarm</label>
+                <input type="time" id="bedtime-alarm">
+            </div>
+            <button class="btn" style="width:100%" onclick="toggleSettings()">SAVE</button>
         </div>
     </div>
 
     <div id="player-screen">
         <div id="side-list">
-            <div style="padding:20px;"><input type="text" id="channel-search" placeholder="Search channels..." oninput="handleSearch()" style="width:100%; padding:15px; border-radius:12px; background:#222; border:none; color:white; font-size: 1rem; outline: none; border: 1px solid #333;"></div>
-            <div id="list-content"></div>
-            <button class="btn" onclick="toggleSidebar()" style="border-radius:0; background: #222;">CLOSE GUIDE</button>
+            <div style="padding:20px;"><input type="text" id="guide-search" placeholder="Filter..." oninput="filterGuide()" style="width:100%; padding:10px;"></div>
+            <div id="list-content" style="overflow-y:auto; flex-grow:1;"></div>
+            <button class="btn" onclick="toggleSidebar()" style="border-radius:0;">CLOSE</button>
         </div>
-        <video id="video" playsinline onclick="showUI()"></video>
-        <div class="ui-overlay" id="ui-overlay">
+        <video id="video" playsinline onclick="toggleUI()"></video>
+        <div class="overlay" id="player-ui">
             <div style="display:flex; justify-content:space-between;">
-                <button class="btn" onclick="toggleSidebar()">☰ CHANNELS</button>
-                <button class="btn" style="background:#ff3b30" onclick="closePlayer()">✕ EXIT</button>
+                <button class="btn" onclick="toggleSidebar()">☰ GUIDE</button>
+                <button class="btn" style="background:#ff3b30" onclick="exit()">✕ EXIT</button>
             </div>
-            <div id="channel-title-display" style="text-align:center; font-weight:bold; font-size:1.8rem; text-shadow: 2px 4px 8px #000;"></div>
-            <div style="display:flex; gap:20px; align-self:center;">
-                <button class="btn" onclick="prev()">◄ PREV</button>
-                <button class="btn" id="play-pause" onclick="togglePlay()" style="min-width: 120px;">PAUSE</button>
-                <button class="btn" onclick="next()">NEXT ►</button>
+            <div style="display:flex; justify-content:center; gap:20px;">
+                <button class="btn" onclick="changeCh(-1)">◄ PREV</button>
+                <button class="btn" id="play-btn" onclick="togglePlay()">PAUSE</button>
+                <button class="btn" onclick="changeCh(1)">NEXT ►</button>
             </div>
         </div>
     </div>
 
 <script>
-    const hls = new Hls(), video = document.getElementById('video');
-    let playlist = [], currentCategoryList = [], filteredList = [], curChUrl = "", recentWatched = [], uiTimer;
+    const video = document.getElementById('video'), hls = new Hls();
+    let playlist = [], currentList = [], curIdx = 0, uiTimer;
 
-    function updateClock() {
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const i18n = {
+        en: { title: "ToastTV📺", settings: "Settings", theme: "Theme", lang: "Language", alarm: "Bedtime Alarm" },
+        ku: { title: "تۆست تیڤی📺", settings: "ڕێکخستنەکان", theme: "ڕەنگ", lang: "زمان", alarm: "کاتی خەوتن" },
+        ar: { title: "توست تي في📺", settings: "الإعدادات", theme: "المظهر", lang: "اللغة", alarm: "منبه النوم" },
+        es: { title: "ToastTV📺", settings: "Ajustes", theme: "Tema", lang: "Idioma", alarm: "Alarma de cama" },
+        fr: { title: "ToastTV📺", settings: "Paramètres", theme: "Thème", lang: "Langue", alarm: "Alarme de sommeil" }
+    };
+
+    function updateTheme() { document.body.className = document.getElementById('theme-select').value === 'light' ? 'light-mode' : ''; }
+    function updateLang() {
+        const l = document.getElementById('lang-select').value;
+        const data = i18n[l] || i18n.en;
+        document.getElementById('app-title').innerText = data.title;
+        document.getElementById('settings-label').innerText = data.settings;
+        document.getElementById('theme-label').innerText = data.theme;
+        document.getElementById('lang-label').innerText = data.lang;
+        document.getElementById('alarm-label').innerText = data.alarm;
     }
-    setInterval(updateClock, 1000); updateClock();
+    function toggleSettings() { const m = document.getElementById('settings-modal'); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; }
 
-    function startApp() {
-        document.getElementById('start-overlay').style.display = 'none'; 
-        document.getElementById('home-screen').style.display = 'block';
-        init(); 
-    }
-
-    window.addEventListener('popstate', function(event) {
-        if (document.getElementById('player-screen').style.display === 'block') {
-            closePlayer();
-            history.pushState(null, null, window.location.pathname);
-        }
-    });
+    setInterval(() => {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        document.getElementById('clock').innerText = timeStr;
+    }, 1000);
 
     async function init() {
-        history.pushState(null, null, window.location.pathname);
         const sources = [
-            { c: 'Quran', u: 'https://iptv-org.github.io/iptv/categories/religious.m3u' },
-            { c: 'English', u: 'https://iptv-org.github.io/iptv/languages/eng.m3u' },
-            { c: 'Sports', u: 'https://iptv-org.github.io/iptv/categories/sports.m3u' },
-            { c: 'Freeview', u: 'https://iptv-org.github.io/iptv/countries/uk.m3u' },
-            { c: 'Kids', u: 'https://iptv-org.github.io/iptv/categories/kids.m3u' },
-            { c: 'Documentary', u: 'https://iptv-org.github.io/iptv/categories/documentary.m3u' },
-            { c: 'Spanish', u: 'https://iptv-org.github.io/iptv/languages/spa.m3u' },
-            { c: 'Movies', u: 'https://iptv-org.github.io/iptv/categories/movies.m3u' },
-            { c: 'Arabic', u: 'https://iptv-org.github.io/iptv/languages/ara.m3u' }
+            { n: 'Kurdish', u: 'https://iptv-org.github.io/iptv/languages/kur.m3u' },
+            { n: 'Movies', u: 'https://iptv-org.github.io/iptv/categories/movies.m3u' },
+            { n: 'Sports', u: 'https://iptv-org.github.io/iptv/categories/sports.m3u' },
+            { n: 'Kids', u: 'https://iptv-org.github.io/iptv/categories/kids.m3u' },
+            { n: 'Greek', u: 'https://iptv-org.github.io/iptv/languages/ell.m3u' },
+            { n: 'English', u: 'https://iptv-org.github.io/iptv/languages/eng.m3u' },
+            { n: 'Spanish', u: 'https://iptv-org.github.io/iptv/languages/spa.m3u' },
+            { n: 'French', u: 'https://iptv-org.github.io/iptv/languages/fra.m3u' },
+            { n: 'Italian', u: 'https://iptv-org.github.io/iptv/languages/ita.m3u' },
+            { n: 'Arabic', u: 'https://iptv-org.github.io/iptv/languages/ara.m3u' }
         ];
-        sources.forEach(s => {
-            fetch(s.u).then(res => res.text()).then(data => parse(data, s.c)).catch(e => {});
-        });
-    }
-
-    function parse(data, cat) {
-        let lines = data.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            if (lines[i].includes('#EXTINF')) {
-                const name = lines[i].split(',')[1]?.trim() || "Channel";
-                if (cat === 'Quran' && !name.toLowerCase().match(/quran|islam|mecca|madina/)) continue;
-
-                const url = lines[i+1]?.trim();
-                let rawLogo = lines[i].match(/tvg-logo="([^"]+)"/)?.[1] || "";
-                
-                const logo = rawLogo ? `https://images.weserv.nl/?url=${encodeURIComponent(rawLogo)}&w=100&h=100&fit=contain&default=https://cdn-icons-png.flaticon.com/512/716/716429.png` : "https://cdn-icons-png.flaticon.com/512/716/716429.png";
-
-                if (url && url.startsWith('http')) {
-                    playlist.push({ name, url, cat, logo });
-                }
-            }
+        for (let s of sources) {
+            try {
+                const r = await fetch(s.u), t = await r.text();
+                t.split('\n').forEach((line, i, arr) => {
+                    if (line.includes('#EXTINF')) {
+                        const url = arr[i+1]?.trim();
+                        if (url?.startsWith('http')) playlist.push({ name: line.split(',')[1]?.trim(), url, cat: s.n });
+                    }
+                });
+            } catch (e) {}
         }
     }
 
-    function filter(cat) {
-        currentCategoryList = playlist.filter(i => i.cat === cat);
-        if (cat === 'Sports') {
-            currentCategoryList.sort((a,b) => a.name.toLowerCase().includes('premier') ? -1 : 1);
-        }
-        filteredList = [...currentCategoryList];
-        renderList();
-        if (filteredList.length > 0) playChannel(filteredList[0]);
+    function loadCat(cat) {
+        currentList = playlist.filter(i => i.cat === cat);
+        renderSidebar(currentList);
+        if (currentList.length > 0) play(0);
     }
 
-    function renderList() {
-        document.getElementById('list-content').innerHTML = filteredList.map((item, i) => `
-            <div class="list-item ${item.url === curChUrl ? 'active-ch' : ''}" tabindex="0" onclick="playByIndex(${i})">
-                <img src="${item.logo}" class="ch-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/716/716429.png'">
-                <span>${item.name}</span>
-            </div>`).join('');
-    }
-
-    function playByIndex(idx) { playChannel(filteredList[idx]); }
-
-    function playChannel(ch) {
-        curChUrl = ch.url;
+    function play(idx) {
+        curIdx = idx; const item = currentList[idx];
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('player-screen').style.display = 'block';
-        document.getElementById('channel-title-display').innerText = ch.name;
-        
-        recentWatched = [ch, ...recentWatched.filter(x => x.url !== ch.url)].slice(0, 8);
-        updateRecentUI();
-
-        if (Hls.isSupported() && ch.url.includes('.m3u8')) {
-            hls.detachMedia(); hls.loadSource(ch.url); hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => {}));
-        } else { video.src = ch.url; video.play().catch(e => {}); }
-        showUI();
+        if (Hls.isSupported()) {
+            hls.detachMedia(); hls.loadSource(item.url); hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+        } else { video.src = item.url; video.play(); }
+        toggleUI();
     }
 
-    function updateRecentUI() {
-        const container = document.getElementById('recent-container');
-        const grid = document.getElementById('recent-grid');
-        if (recentWatched.length > 0) {
-            container.style.display = 'block';
-            grid.innerHTML = recentWatched.map(ch => `
-                <div class="recent-card" onclick="playRecent('${ch.url}')">
-                    <img src="${ch.logo}" style="width:30px; height:30px; margin-bottom:8px; border-radius:6px;"><br>
-                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${ch.name}</div>
-                </div>`).join('');
-        }
-    }
-
-    window.playRecent = (url) => { const ch = playlist.find(x => x.url === url); if (ch) playChannel(ch); };
+    function togglePlay() { video.paused ? (video.play(), document.getElementById('play-btn').innerText="PAUSE") : (video.pause(), document.getElementById('play-btn').innerText="PLAY"); }
+    function toggleUI() { document.getElementById('player-ui').style.opacity = '1'; clearTimeout(uiTimer); uiTimer = setTimeout(() => { document.getElementById('player-ui').style.opacity = '0' }, 5000); }
+    function renderSidebar(list) { document.getElementById('list-content').innerHTML = list.map((ch, i) => `<div class="list-item" tabindex="0" onclick="play(${i})">${ch.name}</div>`).join(''); }
+    function filterGuide() { renderSidebar(currentList.filter(ch => ch.name.toLowerCase().includes(document.getElementById('guide-search').value.toLowerCase()))); }
     function toggleSidebar() { document.getElementById('side-list').classList.toggle('active'); }
-    function closePlayer() { video.pause(); hls.stopLoad(); document.getElementById('player-screen').style.display = 'none'; document.getElementById('home-screen').style.display = 'block'; }
-    function togglePlay() { 
-        if(video.paused) { video.play(); document.getElementById('play-pause').innerText = "PAUSE"; }
-        else { video.pause(); document.getElementById('play-pause').innerText = "PLAY"; }
-    }
-    function next() { let idx = filteredList.findIndex(i => i.url === curChUrl); playChannel(filteredList[(idx + 1) % filteredList.length]); }
-    function prev() { let idx = filteredList.findIndex(i => i.url === curChUrl); playChannel(filteredList[(idx - 1 + filteredList.length) % filteredList.length]); }
-    function showUI() { const ui = document.getElementById('ui-overlay'); ui.style.opacity = '1'; clearTimeout(uiTimer); uiTimer = setTimeout(() => { if(!document.getElementById('side-list').classList.contains('active')) ui.style.opacity = '0' }, 4000); }
-    function handleSearch() { const q = document.getElementById('channel-search').value.toLowerCase(); filteredList = currentCategoryList.filter(item => item.name.toLowerCase().includes(q)); renderList(); }
+    function changeCh(dir) { curIdx = (curIdx + dir + currentList.length) % currentList.length; play(curIdx); }
+    function exit() { video.pause(); document.getElementById('player-screen').style.display = 'none'; document.getElementById('home-screen').style.display = 'block'; }
+
+    init();
 </script>
 </body>
 </html>
