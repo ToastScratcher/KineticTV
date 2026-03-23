@@ -2,142 +2,102 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ToastTV📺</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ToastTV 📺</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
-        :root { --bg: #000000; --accent: #3d5afe; --highlight: #00ff00; }
-        
-        /* Force TV browsers to show white text and black background */
-        * { box-sizing: border-box; outline: none; margin: 0; padding: 0; color: #ffffff !important; }
-        
-        body, html { 
-            width: 100%; height: 100%; 
-            background-color: #000000 !important; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow: hidden; 
+        :root { --bg: #000; --accent: #3d5afe; --highlight: #00ff00; --arsenal: #ef0107; --quran: #2e7d32; }
+        html { font-size: clamp(16px, 2.5vw, 24px); }
+        * { box-sizing: border-box; margin: 0; padding: 0; color: #fff !important; }
+        body { background: #000; font-family: sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+
+        #home-screen { height: 100%; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 100px; }
+        .section-label { padding: 2rem 2rem 0.5rem; font-size: 1rem; color: #666 !important; text-transform: uppercase; font-weight: 800; letter-spacing: 2px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; padding: 1rem 2rem; }
+
+        .card { 
+            background: #161618; border-radius: 1rem; height: 130px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+            font-size: 1.2rem; border: 3px solid transparent; transition: 0.2s; position: relative; z-index: 10;
         }
-
-        /* FORCED SPLASH SCREEN */
-        #splash { 
-            position: fixed; inset: 0; background: #000; z-index: 9999; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        }
-        .toast-logo { font-size: 3.5rem; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 20px var(--accent); }
-        .loader { width: 50px; height: 50px; border: 5px solid #222; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        #home-screen { height: 100vh; display: none; flex-direction: column; overflow-y: auto; padding-bottom: 50px; }
-        #top-header { padding: 35px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a1a1c; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
-        
-        .section-label { padding: 30px 30px 10px; font-size: 0.9rem; letter-spacing: 2px; color: #888 !important; text-transform: uppercase; font-weight: 800; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 0 30px 40px; }
-
-        /* THE UNIVERSAL HIGHLIGHT (Fixes the hover issue) */
-        .card, .btn, .list-item { 
-            background: #161618; 
-            border: 3px solid transparent; 
-            border-radius: 14px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; align-items: center; justify-content: center;
-            text-align: center;
-            user-select: none;
-            position: relative;
-        }
-
-        /* TRIGGERS: Works on TV Remote Focus, PC Mouse Hover, and Mobile Touch */
-        .card:hover, .card:focus, .card:active,
-        .btn:hover, .btn:focus, .btn:active,
-        .list-item:hover, .list-item:focus, .list-item:active { 
-            background: var(--accent) !important;
-            border-color: #ffffff !important; 
-            transform: scale(1.06); 
-            box-shadow: 0 0 25px var(--highlight) !important;
-            z-index: 10 !important;
-        }
-
-        .card { height: 100px; font-size: 1.2rem; font-weight: bold; width: 100%; }
-        .list-item { width: 100%; padding: 20px; margin-bottom: 10px; font-size: 1.1rem; justify-content: flex-start; }
+        .card:hover { border-color: #fff; transform: scale(1.03); background: #222; }
+        .card:active { background: var(--accent) !important; }
 
         #player-screen { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
-        video { width: 100%; height: 100%; background: #000; }
-        
-        .overlay { 
-            position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; 
-            padding: 40px; pointer-events: none; opacity: 0; transition: 0.4s;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.9));
-        }
-        .overlay * { pointer-events: auto; }
-        
-        #side-list { 
-            position: fixed; left: 0; top: 0; bottom: 0; width: 85%; max-width: 400px; 
-            background: #0d0d0f; z-index: 2000; transform: translateX(-100%); transition: 0.3s; 
-            border-right: 1px solid #222; padding: 20px;
-        }
-        #side-list.active { transform: translateX(0); }
-        
-        #guide-search {
-            width:100%; padding:20px; border-radius:12px; background:#1a1a1c; border:2px solid #333; 
-            font-size:18px; margin-bottom: 20px; transition: 0.2s;
-        }
-        #guide-search:focus { border-color: var(--accent); background: #222; }
+        video { width: 100%; height: 100%; object-fit: contain; }
+        #yt-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; }
 
-        .btn { padding: 18px 30px; font-size: 1.1rem; font-weight: bold; }
-        #ch-info { text-align:center; font-size: 1.8rem; font-weight:bold; background:rgba(0,0,0,0.8); padding:20px; border-radius:20px; border:1px solid #444; }
+        .overlay { 
+            position: absolute; inset: 0; display: flex; flex-direction: column; 
+            justify-content: space-between; padding: 2rem; pointer-events: none; 
+            opacity: 0; transition: 0.4s; z-index: 2000; background: rgba(0,0,0,0.6);
+        }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        .btn { padding: 1.2rem 2.5rem; font-size: 1.1rem; font-weight: bold; border-radius: 0.8rem; background: #333; border: none; cursor: pointer; pointer-events: auto; }
+
+        #side-guide { 
+            position: fixed; left: 0; top: 0; bottom: 0; width: 85%; max-width: 450px; 
+            background: #0d0d0f; z-index: 3000; transform: translateX(-100%); transition: 0.3s;
+            padding: 2rem; display: flex; flex-direction: column; border-right: 2px solid #222;
+        }
+        #side-guide.open { transform: translateX(0); }
     </style>
 </head>
 <body>
 
-    <div id="splash">
-        <div class="toast-logo">ToastTV📺</div>
-        <div class="loader"></div>
-        <p style="margin-top: 25px; color: #666 !important; letter-spacing: 1px;">INITIALIZING CHANNELS...</p>
-    </div>
-
     <div id="home-screen">
-        <div id="top-header">
-            <h1 style="font-size: 2.5rem;">ToastTV</h1>
-            <div id="clock" style="font-size: 1.5rem; font-weight: 800; color: var(--accent) !important;">--:--</div>
-        </div>
-        
-        <div class="section-label">🇬🇧 UK & Local</div>
-        <div class="grid">
-            <button class="card" onclick="loadCat('UK')">🇬🇧 UK</button>
-            <button class="card" onclick="loadCat('English')">🏴󠁧󠁢󠁥󠁮󠁧󠁿 English</button>
-            <button class="card" onclick="loadCat('Freeview')">📡 Freeview</button>
+        <div style="padding: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="font-size: 3rem;">ToastTV</h1>
+            <div id="clock" style="font-size: 1.5rem; font-weight: 800; color: var(--accent) !important;">00:00</div>
         </div>
 
-        <div class="section-label">🌍 International</div>
+        <div class="section-label">🇬🇧 UK & LOCAL</div>
         <div class="grid">
-            <button class="card" onclick="loadCat('Kurdish')">☀️ Kurdish</button>
-            <button class="card" onclick="loadCat('Arabic')">🇮🇶 Arabic</button>
-            <button class="card" onclick="loadCat('French')">🇫🇷 French</button>
-            <button class="card" onclick="loadCat('Spanish')">🇪🇸 Spanish</button>
+            <div class="card" onclick="loadCat('UK')">🇬🇧 UK TV</div>
+            <div class="card" onclick="loadCat('Freeview')">📡 Freeview</div>
         </div>
 
-        <div class="section-label">🎬 Entertainment</div>
+        <div class="section-label">🎬 ENTERTAINMENT</div>
         <div class="grid">
-            <button class="card" onclick="loadCat('Movies')">🎥 Movies</button>
-            <button class="card" onclick="loadCat('Sports')">⚽ Sports</button>
-            <button class="card" onclick="loadCat('Kids')">🧸 Kids</button>
+            <div class="card" style="border-color: var(--quran)" onclick="loadCat('Quran')">🕌 Quran TV</div>
+            <div class="card" onclick="loadCat('Sports')">⚽ Sports</div>
+            <div class="card" onclick="loadCat('Movies')">🍿 Movies</div>
+            <div class="card" onclick="loadCat('Music')">🎵 Music</div>
+            <div class="card" onclick="loadCat('Kids')">🧸 Kids</div>
+            <div class="card" onclick="loadCat('News')">🌍 News</div>
+        </div>
+
+        <div class="section-label">🌍 INTERNATIONAL</div>
+        <div class="grid">
+            <div class="card" onclick="loadCat('Arabic')">🇮🇶 Arabic</div>
+            <div class="card" onclick="loadCat('Kurdish')">☀️ Kurdish</div>
+            <div class="card" onclick="loadCat('Spanish')">🇪🇸 Spanish</div>
+            <div class="card" onclick="loadCat('French')">🇫🇷 French</div>
+            <div class="card" onclick="loadCat('German')">🇩🇪 German</div>
+            <div class="card" onclick="loadCat('Italian')">🇮🇹 Italian</div>
+            <div class="card" onclick="loadCat('Greek')">🇬🇷 Greek</div>
         </div>
     </div>
 
     <div id="player-screen">
-        <div id="side-list">
-            <input type="text" id="guide-search" placeholder="Type to search..." oninput="doSearch()">
-            <div id="list-content" style="overflow-y:auto; height:calc(100% - 160px);"></div>
-            <button class="btn" onclick="toggleSidebar()" style="width:100%; background:#ff3b30">CLOSE GUIDE</button>
+        <video id="video" playsinline onclick="showUI()"></video>
+        <div id="yt-hidden"></div>
+        
+        <div id="side-guide">
+            <input type="text" placeholder="Search Arsenal..." oninput="checkArsenal(this.value)" 
+                   style="width: 100%; padding: 1.2rem; background: #222; border: none; border-radius: 10px; margin-bottom: 1.5rem; font-size: 1.2rem;">
+            <div id="list-items" style="overflow-y: auto; flex-grow: 1;"></div>
+            <button class="btn" onclick="toggleGuide()" style="width: 100%; margin-top: 1rem;">BACK</button>
         </div>
-        <video id="video" playsinline onclick="toggleUI()"></video>
-        <div class="overlay" id="player-ui">
-            <div style="display:flex; justify-content:space-between;">
-                <button class="btn" onclick="toggleSidebar()">☰ GUIDE</button>
-                <button class="btn" style="background:#ff3b30" onclick="exit()">✕ EXIT</button>
+
+        <div class="overlay" id="ui">
+            <div style="display: flex; justify-content: space-between;">
+                <button class="btn" onclick="toggleGuide()">🔍 GUIDE</button>
+                <button class="btn" style="background: #ff3b30" onclick="exit()">✕ EXIT</button>
             </div>
-            <div id="ch-info">Select a Channel</div>
-            <div style="display:flex; justify-content:space-around; padding-bottom: 20px;">
+            <div id="ch-name" style="text-align: center; font-size: 2rem; font-weight: 800;">ToastTV</div>
+            <div style="display: flex; justify-content: center; gap: 20px;">
                 <button class="btn" onclick="changeCh(-1)">PREV</button>
                 <button class="btn" onclick="changeCh(1)">NEXT</button>
             </div>
@@ -145,96 +105,94 @@
     </div>
 
 <script>
-    const video = document.getElementById('video'), hls = new Hls();
-    let playlist = [], currentList = [], filteredList = [], curIdx = 0, uiTimer;
+    const hls = new Hls();
+    let ytPlayer, channels = [], curIdx = 0, uiTimer;
 
-    async function init() {
-        const sources = [
-            { n: 'UK', u: 'https://iptv-org.github.io/iptv/countries/uk.m3u' },
-            { n: 'English', u: 'https://iptv-org.github.io/iptv/languages/eng.m3u' },
-            { n: 'Freeview', u: 'https://iptv-org.github.io/iptv/countries/uk.m3u' },
-            { n: 'Kurdish', u: 'https://iptv-org.github.io/iptv/languages/kur.m3u' },
-            { n: 'French', u: 'https://iptv-org.github.io/iptv/languages/fra.m3u' },
-            { n: 'Spanish', u: 'https://iptv-org.github.io/iptv/languages/spa.m3u' },
-            { n: 'Movies', u: 'https://iptv-org.github.io/iptv/categories/movies.m3u' },
-            { n: 'Sports', u: 'https://iptv-org.github.io/iptv/categories/sports.m3u' },
-            { n: 'Kids', u: 'https://iptv-org.github.io/iptv/categories/kids.m3u' },
-            { n: 'Arabic', u: 'https://iptv-org.github.io/iptv/languages/ara.m3u' }
-        ];
+    const sources = {
+        'UK': 'https://iptv-org.github.io/iptv/countries/uk.m3u',
+        'Freeview': 'https://iptv-org.github.io/iptv/countries/uk.m3u',
+        'Arabic': 'https://iptv-org.github.io/iptv/languages/ara.m3u',
+        'Kurdish': 'https://iptv-org.github.io/iptv/languages/kur.m3u',
+        'Spanish': 'https://iptv-org.github.io/iptv/languages/spa.m3u',
+        'French': 'https://iptv-org.github.io/iptv/languages/fra.m3u',
+        'German': 'https://iptv-org.github.io/iptv/languages/deu.m3u',
+        'Italian': 'https://iptv-org.github.io/iptv/languages/ita.m3u',
+        'Greek': 'https://iptv-org.github.io/iptv/languages/ell.m3u',
+        'Sports': 'https://iptv-org.github.io/iptv/categories/sports.m3u',
+        'Movies': 'https://iptv-org.github.io/iptv/categories/movies.m3u',
+        'Music': 'https://iptv-org.github.io/iptv/categories/music.m3u',
+        'Kids': 'https://iptv-org.github.io/iptv/categories/kids.m3u',
+        'News': 'https://iptv-org.github.io/iptv/categories/news.m3u',
+        'Quran': 'https://iptv-org.github.io/iptv/categories/religious.m3u'
+    };
 
-        for (let s of sources) {
-            try {
-                const r = await fetch(s.u), t = await r.text();
-                t.split('\n').forEach((line, i, arr) => {
-                    if (line.includes('#EXTINF')) {
-                        const url = arr[i+1]?.trim();
-                        if (url?.startsWith('http')) playlist.push({ name: line.split(',')[1]?.trim() || "Live Channel", url, cat: s.n });
-                    }
-                });
-            } catch (e) {}
-        }
-        
-        document.getElementById('splash').style.display = 'none';
-        document.getElementById('home-screen').style.display = 'flex';
+    function onYouTubeIframeAPIReady() {
+        ytPlayer = new YT.Player('yt-hidden', { height:'0', width:'0', videoId:'qkwH6HYsW_8' });
     }
 
-    function loadCat(cat) {
-        currentList = playlist.filter(i => i.cat === cat);
-        filteredList = [...currentList];
-        renderSidebar(filteredList);
-        if(currentList.length > 0) play(0);
+    async function loadCat(cat) {
+        try {
+            const r = await fetch(sources[cat]), t = await r.text();
+            channels = [];
+            t.split('\n').forEach((line, i, arr) => {
+                if (line.includes('#EXTINF')) {
+                    const name = line.split(',')[1]?.trim() || "Channel";
+                    const url = arr[i+1]?.trim();
+                    if (url?.startsWith('http')) {
+                        if (cat === 'Quran' && !name.toLowerCase().match(/quran|islam|makkah/)) return;
+                        channels.push({ name, url });
+                    }
+                }
+            });
+            if (channels.length > 0) play(0);
+        } catch (e) { alert("Failed to load category."); }
     }
 
     function play(idx) {
-        curIdx = idx; const item = filteredList[idx];
-        if(!item) return;
+        curIdx = idx;
+        const item = channels[idx];
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('player-screen').style.display = 'block';
-        document.getElementById('ch-info').innerText = item.name;
+        document.getElementById('ch-name').innerText = item.name;
+
         if (Hls.isSupported()) {
-            hls.detachMedia(); hls.loadSource(item.url); hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
-        } else { video.src = item.url; video.play().catch(()=>{}); }
-        toggleUI();
+            hls.loadSource(item.url); hls.attachMedia(document.getElementById('video'));
+            hls.on(Hls.Events.MANIFEST_PARSED, () => document.getElementById('video').play());
+        } else { document.getElementById('video').src = item.url; document.getElementById('video').play(); }
+        showUI(); renderGuide();
     }
 
-    function renderSidebar(list) {
-        document.getElementById('list-content').innerHTML = list.map((ch, i) => {
-            return `<button class="list-item" onclick="play(${i})"><span>${ch.name}</span></button>`;
-        }).join('');
+    function checkArsenal(val) {
+        if (val.toLowerCase().trim() === 'arsenal') {
+            document.getElementById('ui').style.background = "linear-gradient(to bottom, var(--arsenal), #000)";
+            document.getElementById('ch-name').innerText = "ARSENAL: THE GREATEST CLUB IN THE WORLD";
+            if (ytPlayer?.playVideo) ytPlayer.playVideo();
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance("Arsenal the greatest club in the world"));
+        }
     }
 
-    function toggleUI() {
-        const ui = document.getElementById('player-ui');
-        ui.style.opacity = '1'; clearTimeout(uiTimer);
-        uiTimer = setTimeout(() => ui.style.opacity = '0', 5000);
+    function renderGuide() {
+        document.getElementById('list-items').innerHTML = channels.slice(0, 100).map((ch, i) => 
+            `<div style="padding:1.2rem; margin-bottom:0.5rem; background:#1a1a1c; border-radius:8px; cursor:pointer;" onclick="play(${i})">${ch.name}</div>`
+        ).join('');
     }
 
-    function exit() { 
-        video.pause(); 
-        document.getElementById('player-screen').style.display = 'none'; 
-        document.getElementById('home-screen').style.display = 'flex'; 
+    function showUI() {
+        const ui = document.getElementById('ui'); ui.classList.add('active');
+        clearTimeout(uiTimer); uiTimer = setTimeout(() => ui.classList.remove('active'), 5000);
     }
 
-    function toggleSidebar() { document.getElementById('side-list').classList.toggle('active'); }
-
-    function changeCh(dir) { 
-        curIdx = (curIdx + dir + filteredList.length) % filteredList.length; 
-        play(curIdx); 
-    }
-    
-    function doSearch() {
-        const query = document.getElementById('guide-search').value.toLowerCase();
-        filteredList = currentList.filter(ch => ch.name.toLowerCase().includes(query));
-        renderSidebar(filteredList);
+    function exit() {
+        if (ytPlayer?.pauseVideo) ytPlayer.pauseVideo();
+        document.getElementById('video').pause();
+        document.getElementById('ui').style.background = "rgba(0,0,0,0.6)";
+        document.getElementById('player-screen').style.display = 'none';
+        document.getElementById('home-screen').style.display = 'flex';
     }
 
-    setInterval(() => {
-        const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-        document.getElementById('clock').innerText = time;
-    }, 1000);
-    
-    window.onload = init;
+    function toggleGuide() { document.getElementById('side-guide').classList.toggle('open'); }
+    function changeCh(dir) { curIdx = (curIdx + dir + channels.length) % channels.length; play(curIdx); }
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }, 1000);
 </script>
 </body>
 </html>
