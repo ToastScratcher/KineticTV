@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ToastTV 📺</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root { --accent: #3d5afe; --arsenal: #ef0107; --live: #ff3b30; --fc: #ffcc00; --uk: #00247d; }
+        * { box-sizing: border-box; margin: 0; padding: 0; color: #fff !important; }
+        body { background: #000; font-family: sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+
+        #home-screen { height: 100%; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 100px; }
+        .section-label { padding: 2rem 2rem 0.5rem; font-size: 1rem; color: #666 !important; text-transform: uppercase; font-weight: 800; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; padding: 1rem 2rem; }
+
+        /* SPECIAL BUTTONS */
+        .fc-card { background: linear-gradient(135deg, #222, #000); border: 3px solid var(--fc); border-radius: 15px; height: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; color: var(--fc) !important; }
+        .uk-card { background: linear-gradient(135deg, #00247d, #cf142b); border: 3px solid #fff; border-radius: 15px; height: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 900; }
+
+        .card { background: #161618; border-radius: 1rem; height: 90px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; border: 3px solid transparent; transition: 0.2s; }
+        .card:hover { border-color: #fff; background: #222; }
+
+        /* PLAYER */
+        #player-screen { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
+        video { width: 100%; height: 100%; object-fit: contain; }
+        
+        #side-list { position: fixed; left: 0; top: 0; bottom: 0; width: 85%; max-width: 400px; background: #0d0d0f; z-index: 3000; transform: translateX(-100%); transition: 0.3s; padding: 20px; display: flex; flex-direction: column; border-right: 2px solid #222; }
+        #side-list.open { transform: translateX(0); }
+        .list-item { padding: 15px; background: #1a1a1c; margin-bottom: 8px; border-radius: 8px; cursor: pointer; border-left: 4px solid transparent; }
+        .list-item:hover { background: #333; border-left-color: var(--accent); }
+
+        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 2rem; pointer-events: none; opacity: 0; transition: 0.4s; z-index: 2000; background: rgba(0,0,0,0.7); }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        .btn { padding: 1.2rem 2.5rem; font-size: 1rem; font-weight: bold; border-radius: 0.8rem; background: #333; border: none; cursor: pointer; pointer-events: auto; }
+    </style>
+</head>
+<body>
+
+    <div id="home-screen">
+        <div style="padding: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="font-size: 2.5rem;">ToastTV</h1>
+            <div id="clock" style="font-size: 1.2rem; color: var(--accent) !important;">00:00</div>
+        </div>
+
+        <div class="section-label">🇬🇧 UNITED KINGDOM & ENGLISH</div>
+        <div class="grid">
+            <div class="uk-card" onclick="fetchIPTV('uk')">🇬🇧 UK FREEVIEW</div>
+            <div class="card" onclick="fetchIPTV('english')">🇺🇸 ENGLISH (GLOBAL)</div>
+        </div>
+
+        <div class="section-label">🏆 FOOTBALL CENTER</div>
+        <div class="grid">
+            <div class="fc-card" onclick="window.open('http://wvvw.yari.live/', '_blank')">⚽ LIVE FC</div>
+        </div>
+
+        <div class="section-label">🌍 INTERNATIONAL</div>
+        <div class="grid">
+            <div class="card" onclick="fetchIPTV('kurdish')">☀️ Kurdish TV</div>
+            <div class="card" onclick="fetchIPTV('arabic')">🇮🇶 Arabic</div>
+            <div class="card" onclick="fetchIPTV('spanish')">🇪🇸 Spanish</div>
+            <div class="card" onclick="fetchIPTV('french')">🇫🇷 French</div>
+            <div class="card" onclick="fetchIPTV('italian')">🇮🇹 Italian</div>
+            <div class="card" onclick="fetchIPTV('german')">🇩🇪 German</div>
+        </div>
+    </div>
+
+    <div id="player-screen">
+        <div id="side-list">
+            <h2 id="list-name" style="margin-bottom: 15px; color: var(--accent) !important;">Channels</h2>
+            <div id="items-container" style="overflow-y: auto; flex-grow: 1;"></div>
+            <button class="btn" onclick="toggleList()" style="width: 100%; margin-top: 10px;">BACK TO VIDEO</button>
+        </div>
+
+        <video id="video" playsinline onclick="showUI()"></video>
+        
+        <div class="overlay" id="ui">
+            <div style="display: flex; justify-content: space-between;">
+                <button class="btn" onclick="toggleList()">🔍 CHANNEL LIST</button>
+                <button class="btn" style="background: var(--live)" onclick="exit()">✕ EXIT</button>
+            </div>
+            <div id="ch-title" style="text-align: center; font-size: 1.8rem; font-weight: bold;">ToastTV</div>
+            <div style="height: 50px;"></div>
+        </div>
+    </div>
+
+<script>
+    const hls = new Hls();
+    let channels = [], uiTimer;
+
+    const urls = {
+        'uk': 'https://iptv-org.github.io/iptv/countries/uk.m3u',
+        'english': 'https://iptv-org.github.io/iptv/languages/eng.m3u',
+        'kurdish': 'https://iptv-org.github.io/iptv/languages/kur.m3u',
+        'arabic': 'https://iptv-org.github.io/iptv/languages/ara.m3u',
+        'spanish': 'https://iptv-org.github.io/iptv/languages/spa.m3u',
+        'french': 'https://iptv-org.github.io/iptv/languages/fra.m3u',
+        'italian': 'https://iptv-org.github.io/iptv/languages/ita.m3u',
+        'german': 'https://iptv-org.github.io/iptv/languages/deu.m3u'
+    };
+
+    async function fetchIPTV(key) {
+        try {
+            const res = await fetch(urls[key]);
+            const text = await res.text();
+            channels = [];
+            const lines = text.split('\n');
+            lines.forEach((line, i) => {
+                if (line.includes('#EXTINF')) {
+                    const name = line.split(',')[1] || "Unknown Channel";
+                    const url = lines[i+1]?.trim();
+                    if (url && url.startsWith('http')) {
+                        channels.push({ name, url });
+                    }
+                }
+            });
+            if (channels.length > 0) {
+                document.getElementById('list-name').innerText = key.toUpperCase();
+                renderList();
+                playChannel(0);
+            }
+        } catch (e) { alert("Failed to fetch GitHub list. Try again in a second."); }
+    }
+
+    function renderList() {
+        document.getElementById('items-container').innerHTML = channels.slice(0, 200).map((ch, i) => 
+            `<div class="list-item" onclick="playChannel(${i})">${ch.name}</div>`
+        ).join('');
+    }
+
+    function playChannel(idx) {
+        const item = channels[idx];
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('player-screen').style.display = 'block';
+        document.getElementById('ch-title').innerText = item.name;
+
+        if (Hls.isSupported()) {
+            hls.loadSource(item.url);
+            hls.attachMedia(document.getElementById('video'));
+            document.getElementById('video').play();
+        }
+        showUI();
+    }
+
+    function showUI() {
+        const ui = document.getElementById('ui'); ui.classList.add('active');
+        clearTimeout(uiTimer); uiTimer = setTimeout(() => ui.classList.remove('active'), 5000);
+    }
+
+    function toggleList() { document.getElementById('side-list').classList.toggle('open'); }
+
+    function exit() {
+        document.getElementById('video').pause();
+        document.getElementById('player-screen').style.display = 'none';
+        document.getElementById('home-screen').style.display = 'flex';
+        document.getElementById('side-list').classList.remove('open');
+    }
+
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }, 1000);
+</script>
+</body>
+</html>
