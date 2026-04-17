@@ -6,33 +6,31 @@
     <title>ToastTV 📺</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        :root { --accent: #3d5afe; --arsenal: #ef0107; --live: #ff3b30; --fc: #ffcc00; --uk: #00247d; }
+        :root { --accent: #3d5afe; --arsenal: #ef0107; --live: #ff3b30; --fc: #ffcc00; }
         * { box-sizing: border-box; margin: 0; padding: 0; color: #fff !important; }
-        body { background: #000; font-family: sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+        body { background: #000; font-family: sans-serif; overflow-x: hidden; width: 100vw; height: 100vh; }
 
         #home-screen { height: 100%; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 100px; }
-        .section-label { padding: 2rem 2rem 0.5rem; font-size: 1rem; color: #666 !important; text-transform: uppercase; font-weight: 800; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; padding: 1rem 2rem; }
+        .section-label { padding: 1.5rem 2rem 0.5rem; font-size: 0.9rem; color: #888 !important; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; padding: 1rem 2rem; }
 
-        /* SPECIAL BUTTONS */
         .fc-card { background: linear-gradient(135deg, #222, #000); border: 3px solid var(--fc); border-radius: 15px; height: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; color: var(--fc) !important; }
-        .uk-card { background: linear-gradient(135deg, #00247d, #cf142b); border: 3px solid #fff; border-radius: 15px; height: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 900; }
+        .uk-card { background: linear-gradient(135deg, #00247d, #cf142b); border: 2px solid #fff; border-radius: 15px; height: 90px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 900; }
 
-        .card { background: #161618; border-radius: 1rem; height: 90px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; border: 3px solid transparent; transition: 0.2s; }
+        .card { background: #161618; border-radius: 1rem; height: 85px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; border: 2px solid transparent; transition: 0.2s; text-align: center; padding: 10px; }
         .card:hover { border-color: #fff; background: #222; }
 
-        /* PLAYER */
         #player-screen { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
         video { width: 100%; height: 100%; object-fit: contain; }
         
         #side-list { position: fixed; left: 0; top: 0; bottom: 0; width: 85%; max-width: 400px; background: #0d0d0f; z-index: 3000; transform: translateX(-100%); transition: 0.3s; padding: 20px; display: flex; flex-direction: column; border-right: 2px solid #222; }
         #side-list.open { transform: translateX(0); }
-        .list-item { padding: 15px; background: #1a1a1c; margin-bottom: 8px; border-radius: 8px; cursor: pointer; border-left: 4px solid transparent; }
+        .list-item { padding: 15px; background: #1a1a1c; margin-bottom: 8px; border-radius: 8px; cursor: pointer; border-left: 4px solid transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .list-item:hover { background: #333; border-left-color: var(--accent); }
 
         .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 2rem; pointer-events: none; opacity: 0; transition: 0.4s; z-index: 2000; background: rgba(0,0,0,0.7); }
         .overlay.active { opacity: 1; pointer-events: auto; }
-        .btn { padding: 1.2rem 2.5rem; font-size: 1rem; font-weight: bold; border-radius: 0.8rem; background: #333; border: none; cursor: pointer; pointer-events: auto; }
+        .btn { padding: 1rem 2rem; font-size: 1rem; font-weight: bold; border-radius: 0.8rem; background: #333; border: none; cursor: pointer; pointer-events: auto; }
     </style>
 </head>
 <body>
@@ -43,25 +41,36 @@
             <div id="clock" style="font-size: 1.2rem; color: var(--accent) !important;">00:00</div>
         </div>
 
-        <div class="section-label">🇬🇧 UNITED KINGDOM & ENGLISH</div>
-        <div class="grid">
-            <div class="uk-card" onclick="fetchIPTV('uk')">🇬🇧 UK FREEVIEW</div>
-            <div class="card" onclick="fetchIPTV('english')">🇺🇸 ENGLISH (GLOBAL)</div>
-        </div>
-
         <div class="section-label">🏆 FOOTBALL CENTER</div>
         <div class="grid">
             <div class="fc-card" onclick="window.open('http://wvvw.yari.live/', '_blank')">⚽ LIVE FC</div>
         </div>
 
+        <div class="section-label">🇬🇧 UK & ENGLISH</div>
+        <div class="grid">
+            <div class="uk-card" onclick="fetchIPTV('uk')">🇬🇧 UK TV</div>
+            <div class="card" onclick="fetchIPTV('english')">🇺🇸 ENGLISH TV</div>
+        </div>
+
         <div class="section-label">🌍 INTERNATIONAL</div>
         <div class="grid">
-            <div class="card" onclick="fetchIPTV('kurdish')">☀️ Kurdish TV</div>
+            <div class="card" onclick="fetchIPTV('kurdish')">☀️ Kurdish</div>
             <div class="card" onclick="fetchIPTV('arabic')">🇮🇶 Arabic</div>
             <div class="card" onclick="fetchIPTV('spanish')">🇪🇸 Spanish</div>
             <div class="card" onclick="fetchIPTV('french')">🇫🇷 French</div>
             <div class="card" onclick="fetchIPTV('italian')">🇮🇹 Italian</div>
             <div class="card" onclick="fetchIPTV('german')">🇩🇪 German</div>
+            <div class="card" onclick="fetchIPTV('greek')">🇬🇷 Greek</div>
+        </div>
+
+        <div class="section-label">🎬 ENTERTAINMENT CATEGORIES</div>
+        <div class="grid">
+            <div class="card" onclick="fetchIPTV('sports')">⚽ Sports</div>
+            <div class="card" onclick="fetchIPTV('movies')">🍿 Movies</div>
+            <div class="card" onclick="fetchIPTV('music')">🎵 Music</div>
+            <div class="card" onclick="fetchIPTV('news')">📰 News</div>
+            <div class="card" onclick="fetchIPTV('kids')">🧸 Kids</div>
+            <div class="card" style="border-color: #2e7d32" onclick="fetchIPTV('quran')">🕌 Quran TV</div>
         </div>
     </div>
 
@@ -69,17 +78,17 @@
         <div id="side-list">
             <h2 id="list-name" style="margin-bottom: 15px; color: var(--accent) !important;">Channels</h2>
             <div id="items-container" style="overflow-y: auto; flex-grow: 1;"></div>
-            <button class="btn" onclick="toggleList()" style="width: 100%; margin-top: 10px;">BACK TO VIDEO</button>
+            <button class="btn" onclick="toggleList()" style="width: 100%; margin-top: 10px;">BACK</button>
         </div>
 
         <video id="video" playsinline onclick="showUI()"></video>
         
         <div class="overlay" id="ui">
             <div style="display: flex; justify-content: space-between;">
-                <button class="btn" onclick="toggleList()">🔍 CHANNEL LIST</button>
+                <button class="btn" onclick="toggleList()">🔍 LIST</button>
                 <button class="btn" style="background: var(--live)" onclick="exit()">✕ EXIT</button>
             </div>
-            <div id="ch-title" style="text-align: center; font-size: 1.8rem; font-weight: bold;">ToastTV</div>
+            <div id="ch-title" style="text-align: center; font-size: 1.5rem; font-weight: bold; padding: 0 10px;">ToastTV</div>
             <div style="height: 50px;"></div>
         </div>
     </div>
@@ -96,7 +105,14 @@
         'spanish': 'https://iptv-org.github.io/iptv/languages/spa.m3u',
         'french': 'https://iptv-org.github.io/iptv/languages/fra.m3u',
         'italian': 'https://iptv-org.github.io/iptv/languages/ita.m3u',
-        'german': 'https://iptv-org.github.io/iptv/languages/deu.m3u'
+        'german': 'https://iptv-org.github.io/iptv/languages/deu.m3u',
+        'greek': 'https://iptv-org.github.io/iptv/languages/ell.m3u',
+        'sports': 'https://iptv-org.github.io/iptv/categories/sports.m3u',
+        'movies': 'https://iptv-org.github.io/iptv/categories/movies.m3u',
+        'music': 'https://iptv-org.github.io/iptv/categories/music.m3u',
+        'news': 'https://iptv-org.github.io/iptv/categories/news.m3u',
+        'kids': 'https://iptv-org.github.io/iptv/categories/kids.m3u',
+        'quran': 'https://iptv-org.github.io/iptv/categories/religious.m3u'
     };
 
     async function fetchIPTV(key) {
@@ -104,14 +120,11 @@
             const res = await fetch(urls[key]);
             const text = await res.text();
             channels = [];
-            const lines = text.split('\n');
-            lines.forEach((line, i) => {
+            text.split('\n').forEach((line, i, arr) => {
                 if (line.includes('#EXTINF')) {
-                    const name = line.split(',')[1] || "Unknown Channel";
-                    const url = lines[i+1]?.trim();
-                    if (url && url.startsWith('http')) {
-                        channels.push({ name, url });
-                    }
+                    const name = line.split(',')[1] || "Live Stream";
+                    const url = arr[i+1]?.trim();
+                    if (url && url.startsWith('http')) channels.push({ name, url });
                 }
             });
             if (channels.length > 0) {
@@ -119,11 +132,11 @@
                 renderList();
                 playChannel(0);
             }
-        } catch (e) { alert("Failed to fetch GitHub list. Try again in a second."); }
+        } catch (e) { alert("Error loading channels."); }
     }
 
     function renderList() {
-        document.getElementById('items-container').innerHTML = channels.slice(0, 200).map((ch, i) => 
+        document.getElementById('items-container').innerHTML = channels.slice(0, 300).map((ch, i) => 
             `<div class="list-item" onclick="playChannel(${i})">${ch.name}</div>`
         ).join('');
     }
@@ -137,7 +150,10 @@
         if (Hls.isSupported()) {
             hls.loadSource(item.url);
             hls.attachMedia(document.getElementById('video'));
-            document.getElementById('video').play();
+            document.getElementById('video').play().catch(() => {});
+        } else {
+            document.getElementById('video').src = item.url;
+            document.getElementById('video').play().catch(() => {});
         }
         showUI();
     }
