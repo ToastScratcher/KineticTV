@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ToastTV 📺</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root { --accent: #3d5afe; --arsenal: #ef0107; --live: #ff3b30; --fc: #ffcc00; }
+        * { box-sizing: border-box; margin: 0; padding: 0; color: #fff !important; }
+        body { background: #000; font-family: sans-serif; overflow-x: hidden; width: 100vw; height: 100vh; }
+
+        #home-screen { height: 100%; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 100px; }
+        .section-label { padding: 1.5rem 2rem 0.5rem; font-size: 0.9rem; color: #888 !important; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; padding: 1rem 2rem; }
+
+        .fc-card { background: linear-gradient(135deg, #222, #000); border: 3px solid var(--fc); border-radius: 15px; height: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; color: var(--fc) !important; }
+        .uk-card { background: linear-gradient(135deg, #00247d, #cf142b); border: 2px solid #fff; border-radius: 15px; height: 90px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 900; }
+
+        .card { background: #161618; border-radius: 1rem; height: 85px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; border: 2px solid transparent; transition: 0.2s; text-align: center; padding: 10px; }
+        .card:hover { border-color: #fff; background: #222; }
+
+        /* PLAYER & INTERACTIVE ELEMENTS */
+        #player-screen { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
+        video { width: 100%; height: 100%; object-fit: contain; cursor: pointer; }
+        
+        #side-list { position: fixed; left: 0; top: 0; bottom: 0; width: 85%; max-width: 400px; background: #0d0d0f; z-index: 3000; transform: translateX(-100%); transition: 0.3s; padding: 20px; display: flex; flex-direction: column; border-right: 2px solid #222; }
+        #side-list.open { transform: translateX(0); }
+        
+        /* SEARCH BAR */
+        .search-box { width: 100%; padding: 12px; background: #1c1c1e; border: 1px solid #333; border-radius: 8px; margin-bottom: 15px; font-size: 1rem; color: #fff; outline: none; }
+        .search-box:focus { border-color: var(--accent); }
+
+        /* HIGHLIGHT SYSTEM */
+        .list-item { padding: 15px; background: #1a1a1c; margin-bottom: 8px; border-radius: 8px; cursor: pointer; border-left: 4px solid transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: 0.2s; }
+        .list-item:hover { background: #333; }
+        .list-item.active-channel { background: rgba(61, 90, 254, 0.2); border-left-color: var(--accent); font-weight: bold; }
+
+        /* YOUTUBE-STYLE CONTROL OVERLAY */
+        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 2rem; pointer-events: none; opacity: 0; transition: 0.4s; z-index: 2000; background: rgba(0,0,0,0.6); }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        .btn { padding: 1rem 2rem; font-size: 1rem; font-weight: bold; border-radius: 0.8rem; background: #333; border: none; cursor: pointer; pointer-events: auto; z-index: 2100; }
+        
+        /* CENTER PLAY-PAUSE TRIGGER */
+        .center-control { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto; cursor: pointer; width: 80px; height: 80px; background: rgba(0,0,0,0.7); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; z-index: 2100; transition: 0.2s; }
+        .center-control:hover { background: var(--accent); transform: translate(-50%, -50%) scale(1.1); }
+    </style>
+</head>
+<body>
+
+    <div id="home-screen">
+        <div style="padding: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="font-size: 2.5rem;">ToastTV</h1>
+            <div id="clock" style="font-size: 1.2rem; color: var(--accent) !important;">00:00</div>
+        </div>
+
+        <div class="section-label">🏆 FOOTBALL CENTER</div>
+        <div class="grid">
+            <div class="fc-card" onclick="window.open('http://wvvw.yari.live/', '_blank')">⚽ LIVE FC</div>
+        </div>
+
+        <div class="section-label">🇬🇧 UK & ENGLISH</div>
+        <div class="grid">
+            <div class="uk-card" onclick="fetchIPTV('uk')">🇬🇧 UK TV</div>
+            <div class="card" onclick="fetchIPTV('english')">🇺🇸 ENGLISH TV</div>
+        </div>
+
+        <div class="section-label">🌍 INTERNATIONAL</div>
+        <div class="grid">
+            <div class="card" onclick="fetchIPTV('kurdish')">☀️ Kurdish</div>
+            <div class="card" onclick="fetchIPTV('arabic')">🇮🇶 Arabic</div>
+            <div class="card" onclick="fetchIPTV('portugal')">🇵🇹 Portugal</div>
+            <div class="card" onclick="fetchIPTV('spanish')">🇪🇸 Spanish</div>
+            <div class="card" onclick="fetchIPTV('french')">🇫🇷 French</div>
+            <div class="card" onclick="fetchIPTV('italian')">🇮🇹 Italian</div>
+            <div class="card" onclick="fetchIPTV('german')">🇩🇪 German</div>
+            <div class="card" onclick="fetchIPTV('greek')">🇬🇷 Greek</div>
+        </div>
+
+        <div class="section-label">🎬 ENTERTAINMENT CATEGORIES</div>
+        <div class="grid">
+            <div class="card" onclick="fetchIPTV('sports')">⚽ Sports</div>
+            <div class="card" onclick="fetchIPTV('movies')">🍿 Movies</div>
+            <div class="card" onclick="fetchIPTV('music')">🎵 Music</div>
+            <div class="card" onclick="fetchIPTV('news')">📰 News</div>
+            <div class="card" onclick="fetchIPTV('kids')">🧸 Kids</div>
+            <div class="card" style="border-color: #2e7d32" onclick="fetchIPTV('quran')">🕌 Quran TV</div>
+        </div>
+    </div>
+
+    <div id="player-screen">
+        <div id="side-list">
+            <h2 id="list-name" style="margin-bottom: 10px; color: var(--accent) !important;">Channels</h2>
+            <input type="text" id="channel-search" class="search-box" placeholder="Search channels..." oninput="filterChannels(this.value)">
+            <div id="items-container" style="overflow-y: auto; flex-grow: 1;"></div>
+            <button class="btn" onclick="toggleList()" style="width: 100%; margin-top: 10px;">BACK</button>
+        </div>
+
+        <video id="video" playsinline onclick="showUI()"></video>
+        
+        <div class="overlay" id="ui" onclick="hideUITarget(event)">
+            <div style="display: flex; justify-content: space-between; width: 100%;">
+                <button class="btn" onclick="toggleList()">🔍 MENU & SEARCH</button>
+                <button class="btn" style="background: var(--live)" onclick="exit()">✕ EXIT</button>
+            </div>
+            
+            <div class="center-control" id="play-pause-btn" onclick="togglePlay(event)">⏸</div>
+
+            <div id="ch-title" style="text-align: center; font-size: 1.5rem; font-weight: bold; padding: 0 10px; background: rgba(0,0,0,0.4); width: fit-content; margin: 0 auto; padding: 8px 20px; border-radius: 20px;">ToastTV</div>
+        </div>
+    </div>
+
+<script>
+    const hls = new Hls();
+    let channels = [], uiTimer, currentIdx = 0;
+
+    const urls = {
+        'uk': 'https://iptv-org.github.io/iptv/countries/uk.m3u',
+        'english': 'https://iptv-org.github.io/iptv/languages/eng.m3u',
+        'kurdish': 'https://iptv-org.github.io/iptv/languages/kur.m3u',
+        'arabic': 'https://iptv-org.github.io/iptv/languages/ara.m3u',
+        'portugal': 'https://iptv-org.github.io/iptv/languages/por.m3u',
+        'spanish': 'https://iptv-org.github.io/iptv/languages/spa.m3u',
+        'french': 'https://iptv-org.github.io/iptv/languages/fra.m3u',
+        'italian': 'https://iptv-org.github.io/iptv/languages/ita.m3u',
+        'german': 'https://iptv-org.github.io/iptv/languages/deu.m3u',
+        'greek': 'https://iptv-org.github.io/iptv/languages/ell.m3u',
+        'sports': 'https://iptv-org.github.io/iptv/categories/sports.m3u',
+        'movies': 'https://iptv-org.github.io/iptv/categories/movies.m3u',
+        'music': 'https://iptv-org.github.io/iptv/categories/music.m3u',
+        'news': 'https://iptv-org.github.io/iptv/categories/news.m3u',
+        'kids': 'https://iptv-org.github.io/iptv/categories/kids.m3u',
+        'quran': 'https://iptv-org.github.io/iptv/categories/religious.m3u'
+    };
+
+    async function fetchIPTV(key) {
+        try {
+            const res = await fetch(urls[key]);
+            const text = await res.text();
+            channels = [];
+            text.split('\n').forEach((line, i, arr) => {
+                if (line.includes('#EXTINF')) {
+                    const name = line.split(',')[1] || "Live Stream";
+                    const url = arr[i+1]?.trim();
+                    if (url && url.startsWith('http')) channels.push({ name, url });
+                }
+            });
+            if (channels.length > 0) {
+                document.getElementById('list-name').innerText = key.toUpperCase();
+                document.getElementById('channel-search').value = ''; // Reset query
+                renderList(channels);
+                playChannel(0);
+            }
+        } catch (e) { alert("Error loading channels."); }
+    }
+
+    function renderList(targetArray) {
+        const container = document.getElementById('items-container');
+        container.innerHTML = targetArray.map((ch) => {
+            // Match structural index even when array is filtered
+            const absoluteIndex = channels.findIndex(orig => orig.url === ch.url);
+            const isCurrent = absoluteIndex === currentIdx ? 'active-channel' : '';
+            return `<div class="list-item ${isCurrent}" id="ch-${absoluteIndex}" onclick="playChannel(${absoluteIndex})">${ch.name}</div>`;
+        }).join('');
+    }
+
+    // LIST CHANNEL LIVE SEARCH FILTER
+    function filterChannels(query) {
+        const filtered = channels.filter(ch => ch.name.toLowerCase().includes(query.toLowerCase()));
+        renderList(filtered);
+    }
+
+    function playChannel(idx) {
+        currentIdx = idx;
+        const item = channels[idx];
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('player-screen').style.display = 'block';
+        document.getElementById('ch-title').innerText = item.name;
+        document.getElementById('play-pause-btn').innerText = '⏸';
+
+        // Update selected tracking visuals
+        document.querySelectorAll('.list-item').forEach(el => el.classList.remove('active-channel'));
+        const activeTarget = document.getElementById(`ch-${idx}`);
+        if(activeTarget) activeTarget.classList.add('active-channel');
+
+        if (Hls.isSupported()) {
+            hls.loadSource(item.url);
+            hls.attachMedia(document.getElementById('video'));
+            document.getElementById('video').play().catch(() => {});
+        } else {
+            const vid = document.getElementById('video');
+            vid.src = item.url;
+            vid.play().catch(() => {});
+        }
+        showUI();
+    }
+
+    // YOUTUBE PLAY-PAUSE HOOK
+    function togglePlay(event) {
+        if(event) event.stopPropagation(); // Avoid UI close hit
+        const vid = document.getElementById('video');
+        const btn = document.getElementById('play-pause-btn');
+        if (vid.paused) {
+            vid.play();
+            btn.innerText = '⏸';
+        } else {
+            vid.pause();
+            btn.innerText = '▶';
+        }
+        resetUITimer();
+    }
+
+    function showUI() {
+        document.getElementById('ui').classList.add('active');
+        resetUITimer();
+    }
+
+    function resetUITimer() {
+        clearTimeout(uiTimer);
+        uiTimer = setTimeout(() => {
+            document.getElementById('ui').classList.remove('active');
+        }, 5000);
+    }
+
+    function hideUITarget(e) {
+        if (e.target.id === 'ui') {
+            document.getElementById('ui').classList.remove('active');
+        }
+    }
+
+    function toggleList() { document.getElementById('side-list').classList.toggle('open'); }
+
+    function exit() {
+        document.getElementById('video').pause();
+        document.getElementById('player-screen').style.display = 'none';
+        document.getElementById('home-screen').style.display = 'flex';
+        document.getElementById('side-list').classList.remove('open');
+    }
+
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }, 1000);
+</script>
+</body>
+</html>
