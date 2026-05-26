@@ -1,25 +1,11 @@
-# 🍞 ToastTV v3.0 (2026 Edition)
-
-Welcome to **ToastTV**, the official media player designed for the **Toast420 (@2763JNJ)** community. This is a lightweight, high-performance web-based IPTV player that aggregates live streams from across the globe into one clean, responsive interface.
-
-## 🚀 Features
-* **Global Live TV:** Massive library including UK Freeview, Arabic, Kurdish, Spanish, French, Italian, German, and Greek channels.
-* **The Arsenal Protocol:** Searching for "Arsenal" triggers the "Greatest Club in the World" mode, featuring high-fidelity anthem audio and a custom red-out UI.
-* **Multi-Category Navigation:** Dedicated sections for Sports, Movies, Kids, Music, News, and a specialized Quran TV section.
-* **Adaptive Streaming:** Powered by `Hls.js` for smooth buffer-free playback of M3U8 streams.
-* **Mobile Optimized:** Full-screen touch controls and a slide-out guide for easy navigation on any device.
-
-## 🛠️ Installation
-1.  Clone the repository.
-2.  Open `index.html` in any modern web browser.
-3.  **No server required**—runs entirely on the client side.
-
-## ⚽ The "Arsenal" Easter Egg
-This player is optimized for the Gunners. Type **"Arsenal"** into the search bar while in the player to activate the club anthem and theme.
-
-## 📜 Credits
-Developed for **Toast420**.
-Powered by the `iptv-org` database and Google's Veo/Lyria 2026 engines.
-
+ToastTV is a fast, lightweight, and clean web application designed for seamless IPTV and live football tracking. Built natively with absolute cross-device responsiveness, it combines high-performance multi-language stream handling with a zero-bloat user interface.
+⚡ Core Features:
+⚽ Integrated Football Center: Features a dedicated, secure quick-launch system for Live FC (Yari.Live) that safely breaks through frame restrictions by opening direct streaming sources perfectly.
+🌍 16 Global Languages & Networks: Instant, zero-lag auto-fetching direct from global IPTV databases, covering:
+UK TV / Freeview, English Global, Kurdish, Arabic, Portugal, Spanish, French, Italian, German, and Greek.
+🎬 Smart Entertainment Sorting: Organized sections dividing high-demand categories such as Live Sports, Movies, 24/7 Global News, Music Networks, Kids Channels, and Quran TV.
+🔍 Live Menu Search Bar: An integrated, real-time channel filtering system inside the sliding menu guide to instantly parse through hundreds of stations in less than a second.
+🎥 YouTube-Inspired Player Core: Features a premium gesture-based player engine equipped with a central, single-tap responsive Play/Pause layout overlay.
+🎨 Active Visual Highlight tracking: Auto-detects and visually highlights the active station inside the playlist directory, ensuring seamless menu navigation during live viewing.
 ---
 *Disclaimer: This app is a stream aggregator. It does not host any content. All streams are sourced from publicly available M3U8 playlists.*
