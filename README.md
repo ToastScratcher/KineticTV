@@ -1,4 +1,4 @@
-# 📺 ToastTV — Ultimate Cross-Platform Streaming Hub
+# 📺 KineticTV— Ultimate Cross-Platform Streaming Hub
 
 <p align="center">
   <a href="https://youtu.be/FtCKVmFo5sM">
@@ -6,8 +6,10 @@
   </a>
 </p>
 
-## ⚡ Features
-ToastTV is a fast, lightweight, and responsive web application designed for seamless IPTV navigation and real-time live channel streaming with zero bloat.
+## TOAST TV HAS BEEN RENAMED TO KINETIC TV
+
+⚡ Features
+KineticTVis a fast, lightweight, and responsive web application designed for seamless IPTV navigation and real-time live channel streaming with zero bloat.
 
 * **⚽ Integrated Football Center:** Features a dedicated shortcut for *Live FC (Yari.Live)* optimized to open securely in a clean, external environment.
 * **🌍 17 Global Categories & Networks:** Includes instant, zero-lag auto-fetching direct from public global database registries covering:
