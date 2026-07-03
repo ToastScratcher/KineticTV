@@ -6,10 +6,10 @@
   </a>
 </p>
 
-## TOAST TV HAS BEEN RENAMED TO KINETIC TV
+## TOAST TV HAS BEEN RENAMED TO KEX TV
 
 ⚡ Features
-KineticTVis a fast, lightweight, and responsive web application designed for seamless IPTV navigation and real-time live channel streaming with zero bloat.
+KexTV is a fast, lightweight, and responsive web application designed for seamless IPTV navigation and real-time live channel streaming with zero bloat.
 
 * **⚽ Integrated Football Center:** Features a dedicated shortcut for *Live FC (Yari.Live)* optimized to open securely in a clean, external environment.
 * **🌍 17 Global Categories & Networks:** Includes instant, zero-lag auto-fetching direct from public global database registries covering:
