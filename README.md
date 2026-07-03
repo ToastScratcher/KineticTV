@@ -1,4 +1,4 @@
-# 📺 KineticTV— Ultimate Cross-Platform Streaming Hub
+# 📺 KexTV— Ultimate Cross-Platform Streaming Hub
 
 <p align="center">
   <a href="https://youtu.be/FtCKVmFo5sM">
