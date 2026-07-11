@@ -4,58 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kex TV 📺</title>
-    
-    <!-- BRANDING -->
     <link rel="icon" type="image/png" href="1000042256.png">
     <link rel="apple-touch-icon" href="1000042256.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    
     <style>
         :root { --accent: #3d5afe; --live: #ff3b30; --fc: #ffcc00; }
         * { box-sizing: border-box; margin: 0; padding: 0; color: #fff !important; }
         body { background: #000; font-family: sans-serif; overflow-x: hidden; width: 100vw; height: 100vh; }
         #home-screen { height: 100%; overflow-y: auto; padding-bottom: 100px; }
-        
         .guide-container { position: relative; padding: 1rem 2rem; }
         .dropbtn { background: #3d5afe; padding: 12px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; width: 100%; }
         .dropdown-content { display: none; position: absolute; background: #1c1c1e; min-width: 160px; z-index: 500; border-radius: 8px; margin-top: 5px; width: calc(100% - 4rem); }
         .dropdown-content a { color: white; padding: 12px 16px; text-decoration: none; display: block; border-bottom: 1px solid #333; }
         .dropdown-content a:hover { background: #333; }
         .show { display: block; }
-
         .section-label { padding: 1.5rem 2rem 0.5rem; font-size: 0.9rem; color: #888 !important; text-transform: uppercase; font-weight: 800; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; padding: 1rem 2rem; }
         .card { background: #161618; border-radius: 1rem; height: 85px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid transparent; transition: 0.2s; }
         .card:hover { border-color: #fff; background: #222; }
-        
-        /* PLAYER & UI */
         #player-screen { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
         video { width: 100%; height: 100%; object-fit: contain; }
-        
         #side-list { position: fixed; left: 0; top: 0; bottom: 0; width: 85%; max-width: 400px; background: #0d0d0f; z-index: 3000; transform: translateX(-100%); transition: 0.3s; padding: 20px; border-right: 2px solid #222; }
         #side-list.open { transform: translateX(0); }
         .search-box { width: 100%; padding: 12px; background: #1c1c1e; border: 1px solid #333; border-radius: 8px; margin-bottom: 15px; color: #fff; }
         .list-item { padding: 15px; background: #1a1a1c; margin-bottom: 8px; border-radius: 8px; cursor: pointer; }
         .highlight { border: 2px solid var(--accent) !important; background: #222 !important; }
-        
-        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 2rem; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; z-index: 2000; background: rgba(0,0,0,0.6); }
+        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 2rem; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; z-index: 2000; background: rgba(0,0,0,0.4); }
         .overlay.active { opacity: 1; pointer-events: auto; }
+        .overlay.active > * { pointer-events: auto; }
         .top-menu { text-align: center; font-size: 1.5rem; font-weight: bold; }
         .mid-menu { display: flex; justify-content: center; align-items: center; }
         .bot-menu { display: flex; justify-content: space-between; gap: 10px; }
-        .btn { padding: 1rem 2rem; font-size: 1rem; font-weight: bold; border-radius: 0.8rem; background: #333; border: none; cursor: pointer; pointer-events: auto; }
+        .btn { padding: 1rem 2rem; font-size: 1rem; font-weight: bold; border-radius: 0.8rem; background: #333; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <div id="home-screen">
         <div style="padding: 2rem; display: flex; align-items: center; gap: 15px;">
             <img src="1000042256.png" style="width: 50px; height: 50px; border-radius: 8px;">
             <h1 style="font-size: 2.5rem;">Kex TV</h1>
         </div>
-
         <div class="guide-container">
             <button onclick="document.getElementById('guideDropdown').classList.toggle('show')" class="dropbtn">📺 TV GUIDE</button>
             <div id="guideDropdown" class="dropdown-content">
@@ -66,10 +55,10 @@
                 <a href="https://tvepg.eu/en/portugal" target="_blank">Portugal</a>
             </div>
         </div>
-
         <div class="section-label">🏆 FOOTBALL CENTER</div>
         <div class="grid"><div class="card" style="border: 3px solid var(--fc); color: var(--fc) !important;" onclick="window.open('http://wvvw.yari.live/', '_blank')">⚽ LIVE FC</div></div>
-
+        <div class="section-label">🌍 MULTIMEDIA</div>
+        <div class="grid"><div class="card" onclick="fetchIPTV('multimedia')">🌍 MultiMedia</div></div>
         <div class="section-label">🌍 INTERNATIONAL</div>
         <div class="grid">
             <div class="card" onclick="fetchIPTV('uk')">🇬🇧 UK TV</div>
@@ -81,7 +70,6 @@
             <div class="card" onclick="fetchIPTV('spanish')">🇪🇸 Spanish</div>
             <div class="card" onclick="fetchIPTV('french')">🇫🇷 French</div>
         </div>
-
         <div class="section-label">🎬 ENTERTAINMENT</div>
         <div class="grid">
             <div class="card" onclick="fetchIPTV('sports')">⚽ Sports</div>
@@ -91,16 +79,13 @@
             <div class="card" onclick="fetchIPTV('quran')">🕌 Quran TV</div>
         </div>
     </div>
-
     <div id="player-screen">
         <div id="side-list">
-            <input type="text" id="channel-search" class="search-box" placeholder="Search..." oninput="filterChannels(this.value)">
+            <input type="text" id="channel-search" class="search-box" placeholder="Search..." oninput="filterAndRender()">
             <div id="items-container" style="overflow-y: auto; height: 80%;"></div>
             <button class="btn" onclick="toggleList()" style="width: 100%;">BACK</button>
         </div>
-        
         <video id="video" playsinline onclick="showUI()"></video>
-        
         <div class="overlay" id="ui">
             <div class="top-menu" id="channel-name">CHANNEL NAME</div>
             <div class="mid-menu"><button class="btn" onclick="togglePlay()">⏯️ PLAY/PAUSE</button></div>
@@ -110,87 +95,72 @@
             </div>
         </div>
     </div>
-
-<script>
-    const hls = new Hls();
-    let channels = [];
-    let uiTimer;
-    const urls = {
-        'uk': 'https://iptv-org.github.io/iptv/countries/uk.m3u',
-        'english': 'https://iptv-org.github.io/iptv/languages/eng.m3u',
-        'iraq': 'https://iptv-org.github.io/iptv/countries/iq.m3u',
-        'kurdish': 'https://iptv-org.github.io/iptv/languages/kur.m3u',
-        'arabic': 'https://iptv-org.github.io/iptv/languages/ara.m3u',
-        'portugal': 'https://iptv-org.github.io/iptv/languages/por.m3u',
-        'spanish': 'https://iptv-org.github.io/iptv/languages/spa.m3u',
-        'french': 'https://iptv-org.github.io/iptv/languages/fra.m3u',
-        'sports': 'https://iptv-org.github.io/iptv/categories/sports.m3u',
-        'movies': 'https://iptv-org.github.io/iptv/categories/movies.m3u',
-        'music': 'https://iptv-org.github.io/iptv/categories/music.m3u',
-        'kids': 'https://iptv-org.github.io/iptv/categories/kids.m3u',
-        'quran': 'https://iptv-org.github.io/iptv/categories/religious.m3u'
-    };
-
-    async function fetchIPTV(key) {
-        const res = await fetch(urls[key]);
-        const text = await res.text();
-        channels = [];
-        text.split('\n').forEach((line, i, arr) => {
-            if (line.includes('#EXTINF')) {
-                channels.push({ name: line.split(',')[1], url: arr[i+1]?.trim() });
-            }
-        });
-        renderList(channels);
-        playChannel(0);
-    }
-
-    function renderList(arr) {
-        document.getElementById('items-container').innerHTML = arr.map((ch, i) => 
-            `<div class="list-item" onclick="playChannel(${i})">${ch.name}</div>`).join('');
-    }
-
-    function filterChannels(q) {
-        renderList(channels.filter(ch => ch.name.toLowerCase().includes(q.toLowerCase())));
-    }
-
-    function showUI() {
-        const ui = document.getElementById('ui');
-        ui.classList.add('active');
-        clearTimeout(uiTimer);
-        uiTimer = setTimeout(() => ui.classList.remove('active'), 5000);
-    }
-
-    function playChannel(i) {
-        document.querySelectorAll('.list-item').forEach((el, idx) => {
-            el.classList.toggle('highlight', idx === i);
-        });
-        
-        document.getElementById('channel-name').innerText = channels[i].name;
-        document.getElementById('home-screen').style.display = 'none';
-        document.getElementById('player-screen').style.display = 'block';
-        showUI();
-        
-        hls.loadSource(channels[i].url);
-        hls.attachMedia(document.getElementById('video'));
-        document.getElementById('video').play();
-    }
-
-    function togglePlay() {
-        const video = document.getElementById('video');
-        video.paused ? video.play() : video.pause();
-    }
-
-    function toggleList() { document.getElementById('side-list').classList.toggle('open'); }
-    function exit() { location.reload(); }
-
-    window.onclick = function(event) {
-        if (!event.target.matches('.dropbtn')) {
-            var dropdowns = document.getElementsByClassName("dropdown-content");
-            for (let i = 0; i < dropdowns.length; i++) {
-                dropdowns[i].classList.remove('show');
-            }
+    <script>
+        const hls = new Hls();
+        let channels = [];
+        let currentList = [];
+        let uiTimer;
+        const urls = {
+            'multimedia': 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
+            'uk': 'https://iptv-org.github.io/iptv/countries/uk.m3u',
+            'english': 'https://iptv-org.github.io/iptv/languages/eng.m3u',
+            'iraq': 'https://iptv-org.github.io/iptv/countries/iq.m3u',
+            'kurdish': 'https://iptv-org.github.io/iptv/languages/kur.m3u',
+            'arabic': 'https://iptv-org.github.io/iptv/languages/ara.m3u',
+            'portugal': 'https://iptv-org.github.io/iptv/languages/por.m3u',
+            'spanish': 'https://iptv-org.github.io/iptv/languages/spa.m3u',
+            'french': 'https://iptv-org.github.io/iptv/languages/fra.m3u',
+            'sports': 'https://iptv-org.github.io/iptv/categories/sports.m3u',
+            'movies': 'https://iptv-org.github.io/iptv/categories/movies.m3u',
+            'music': 'https://iptv-org.github.io/iptv/categories/music.m3u',
+            'kids': 'https://iptv-org.github.io/iptv/categories/kids.m3u',
+            'quran': 'https://iptv-org.github.io/iptv/categories/religious.m3u'
+        };
+        async function fetchIPTV(key) {
+            const res = await fetch(urls[key]);
+            const text = await res.text();
+            channels = [];
+            text.split('\n').forEach((line, i, arr) => {
+                if (line.includes('#EXTINF')) channels.push({ name: line.split(',')[1], url: arr[i+1]?.trim() });
+            });
+            renderList(channels);
+            playChannel(channels[0], 0);
         }
-    }
-</script>
+        function renderList(arr) {
+            currentList = arr;
+            document.getElementById('items-container').innerHTML = arr.map((ch, i) => 
+                `<div class="list-item" onclick="playFromFiltered(${i})">${ch.name}</div>`).join('');
+        }
+        function filterAndRender() {
+            const q = document.getElementById('channel-search').value;
+            renderList(channels.filter(ch => ch.name.toLowerCase().includes(q.toLowerCase())));
+        }
+        function playFromFiltered(i) {
+            const selected = currentList[i];
+            playChannel(selected, i);
+        }
+        function playChannel(ch, idx) {
+            document.querySelectorAll('.list-item').forEach((el, i) => {
+                el.classList.toggle('highlight', i === idx);
+            });
+            document.getElementById('channel-name').innerText = ch.name;
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('player-screen').style.display = 'block';
+            showUI();
+            hls.loadSource(ch.url);
+            hls.attachMedia(document.getElementById('video'));
+            document.getElementById('video').play();
+        }
+        function showUI() {
+            const ui = document.getElementById('ui');
+            ui.classList.add('active');
+            clearTimeout(uiTimer);
+            uiTimer = setTimeout(() => ui.classList.remove('active'), 5000);
+        }
+        function togglePlay(e) { if(e) e.stopPropagation(); const v = document.getElementById('video'); v.paused ? v.play() : v.pause(); }
+        function toggleList(e) { if(e) e.stopPropagation(); document.getElementById('side-list').classList.toggle('open'); }
+        function exit(e) { if(e) e.stopPropagation(); location.reload(); }
+        window.onclick = function(e) { if (!e.target.matches('.dropbtn')) { var d = document.getElementsByClassName("dropdown-content"); for (let i = 0; i < d.length; i++) d[i].classList.remove('show'); } }
+    </script>
 </body>
 </html>
